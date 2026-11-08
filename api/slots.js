@@ -2,7 +2,7 @@
 const BASE = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 const ADMIN_KEY = process.env.ADMIN_KEY || '';
-const SLOT_RE = /^s(0[1-9]|1[0-9]|20)$/;
+const SLOT_RE = /^(sat|sun)-(17|18|19|20|21)(00|30)$/;
 
 async function redis(cmd) {
   const res = await fetch(BASE, {

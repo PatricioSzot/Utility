@@ -3,10 +3,10 @@
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="/favicon.png" sizes="64x64" type="image/png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="description" content="Pick your time slot for Pat's 32nd birthday photo shoot, Saturday, November 28, 2026.">
+<meta name="description" content="Pick your time slot for Pat's 32nd birthday photo shoot, Saturday and Sunday, November 28–29, 2026.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Family photo shoot">
-<meta property="og:description" content="Pick your time slot for Pat's 32nd birthday photo shoot, Saturday, November 28, 2026.">
+<meta property="og:description" content="Pick your time slot for Pat's 32nd birthday photo shoot, Saturday and Sunday, November 28–29, 2026.">
 <meta property="og:image" content="/og-bed.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -130,11 +130,14 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .pick time{font:600 12px/1.2 var(--font);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
 .inv{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px 20px}
 .inv li{font:500 18px/1.3 var(--font);letter-spacing:0}
+.day{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:22px 0 10px;border-bottom:1px solid var(--line)}
+.day .dn{font:300 26px/1.1 var(--serif);letter-spacing:-.005em}
+.day .dc{font:600 12px/1.2 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 </style></head><body>
 
 <div class="wrap">
   <header>
-    <p class="meta">Saturday, November 28, 2026</p>
+    <p class="meta">Saturday &amp; Sunday, November 28–29, 2026</p>
     <h1>Family photo shoot</h1>
     <p class="sub">Pat's 32nd birthday. Kink / leather baddy shoot, photographed by Kellen Gaughan</p>
   </header>
@@ -215,7 +218,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
   </section>
 
   <section>
-    <h2 class="pick"><span>Pick your time</span> <time datetime="2026-11-28">Sat, Nov 28, 2026</time></h2>
+    <h2 class="pick"><span>Pick your time</span> <time datetime="2026-11-28/2026-11-29">Sat–Sun, Nov 28–29</time></h2>
     <p class="note">All times are Eastern. One 30 minute slot each.</p>
     <div class="count">
       <div class="ticks" id="ticks" aria-hidden="true"></div>
@@ -257,12 +260,16 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 
 <script>
 (function(){
+  var DAYS=[{k:'sat',name:'Saturday, Nov 28',sh:'Sat'},{k:'sun',name:'Sunday, Nov 29',sh:'Sun'}];
   var SLOTS=[];
   function hm(m){var h=Math.floor(m/60),mm=m%60;return{t:(((h+11)%12)+1)+':'+String(mm).padStart(2,'0'),p:h>=12?'PM':'AM'};}
-  for(var i=0;i<20;i++){
-    var s=660+30*i,a=hm(s),b=hm(s+30);
-    SLOTS.push({id:'s'+String(i+1).padStart(2,'0'),label:a.p===b.p?a.t+' – '+b.t+' '+b.p:a.t+' '+a.p+' – '+b.t+' '+b.p});
-  }
+  DAYS.forEach(function(d){
+    for(var i=0;i<10;i++){
+      var s=1020+30*i,a=hm(s),b=hm(s+30);
+      var label=a.p===b.p?a.t+' – '+b.t+' '+b.p:a.t+' '+a.p+' – '+b.t+' '+b.p;
+      SLOTS.push({id:d.k+'-'+Math.floor(s/60)+(s%60?'30':'00'),day:d,label:label,full:d.sh+' '+label});
+    }
+  });
   var $=function(id){return document.getElementById(id);};
   var API='/api/slots';
   var params=new URLSearchParams(location.search);
@@ -296,7 +303,16 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
     var list=$('slots');list.textContent='';
     var my=mine(),taken=0;
     var ticks=$('ticks');ticks.textContent='';
+    var dayOpen={};SLOTS.forEach(function(sl){dayOpen[sl.day.k]=(dayOpen[sl.day.k]||0)+(claims[sl.id]?0:1);});
+    var lastDay=null;
     SLOTS.forEach(function(sl){
+      if(sl.day!==lastDay){
+        lastDay=sl.day;
+        var dh=document.createElement('li');dh.className='day';
+        var dn=document.createElement('span');dn.className='dn';dn.textContent=sl.day.name;
+        var dc=document.createElement('span');dc.className='dc';dc.textContent=loaded?dayOpen[sl.day.k]+' open':'';
+        dh.appendChild(dn);dh.appendChild(dc);list.appendChild(dh);
+      }
       var c=claims[sl.id];
       var isMine=!!(c&&c.mine);
       if(c)taken++;
@@ -319,14 +335,14 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
         if(!c){
           var b=document.createElement('button');b.type='button';b.className='btn';b.disabled=busy;
           b.textContent=my?'Move here':'Select';
-          b.setAttribute('aria-label',(my?'Move to ':'Select ')+sl.label);
+          b.setAttribute('aria-label',(my?'Move to ':'Select ')+sl.full);
           b.addEventListener('click',function(){claim(sl);});
           acts.appendChild(b);
         }else if(isMine||isAdmin){
           var r=document.createElement('button');r.type='button';r.className='btn quiet sm';r.disabled=busy;
           var armed=pendingRelease===sl.id;
           r.textContent=armed?'Tap to confirm':'Release';
-          r.setAttribute('aria-label','Release '+sl.label);
+          r.setAttribute('aria-label','Release '+sl.full);
           r.addEventListener('click',function(){
             if(pendingRelease===sl.id){clearTimeout(pendingTimer);pendingRelease=null;release(sl);}
             else{pendingRelease=sl.id;clearTimeout(pendingTimer);pendingTimer=setTimeout(function(){pendingRelease=null;render();},4000);render();}
@@ -337,7 +353,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
       li.appendChild(left);li.appendChild(acts);list.appendChild(li);
     });
     var open=SLOTS.length-taken;
-    $('countText').textContent=loaded?(open===0?'All '+SLOTS.length+' times are taken':open+' of '+SLOTS.length+' times open'):(notConfigured?SLOTS.length+' half-hour times, 11:00 AM to 9:00 PM':'Checking which times are open');
+    $('countText').textContent=loaded?(open===0?'All '+SLOTS.length+' times are taken':open+' of '+SLOTS.length+' times open'):(notConfigured?SLOTS.length+' half-hour times across Saturday and Sunday, 5:00 PM to 10:00 PM':'Checking which times are open');
     var n=$('notice'),msg='';
     if(notConfigured)msg='Sign-up isn’t switched on yet. Text Pat.';
     else if(stale)msg='Having trouble reaching the sheet. The times below may be out of date.';
@@ -370,10 +386,10 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
     var prev=mine();
     busy=true;say('');render();
     try{
-      var r=await api('POST',{action:'claim',slot:slot.id,label:slot.label,name:name,cid:cid});
-      if(r.status===409){say(slot.label+' was just taken'+(r.data.by?' by '+r.data.by:'')+'. Pick another time.');}
+      var r=await api('POST',{action:'claim',slot:slot.id,label:slot.full,name:name,cid:cid});
+      if(r.status===409){say(slot.full+' was just taken'+(r.data.by?' by '+r.data.by:'')+'. Pick another time.');}
       else if(r.status!==200){say('That didn’t save, and nothing was changed. Try again.');}
-      else{say((prev?'Moved to ':'You’re booked for ')+slot.label+'.');}
+      else{say((prev?'Moved to ':'You’re booked for ')+slot.full+'.');}
     }catch(err){say('That didn’t save, and nothing was changed. Try again.');}
     finally{busy=false;await refresh();render();}
   }
@@ -382,8 +398,8 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
     if(busy)return;
     busy=true;say('');render();
     try{
-      var r=await api('POST',{action:'release',slot:slot.id,label:slot.label,cid:cid,admin:adminKey});
-      if(r.status===200)say(slot.label+' is open again.');
+      var r=await api('POST',{action:'release',slot:slot.id,label:slot.full,cid:cid,admin:adminKey});
+      if(r.status===200)say(slot.full+' is open again.');
       else say('That didn’t go through. Try again.');
     }catch(err){say('That didn’t go through. Try again.');}
     finally{busy=false;await refresh();render();}
@@ -413,7 +429,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
   }
   $('dlSheet').addEventListener('click',function(){
     var rows=[['Slot','Time','Name','Picked at (ET)']];
-    SLOTS.forEach(function(sl){var c=claims[sl.id];rows.push([sl.id,sl.label,c?c.name:'(open)',c?fmtT(c.at):'']);});
+    SLOTS.forEach(function(sl){var c=claims[sl.id];rows.push([sl.id,sl.full,c?c.name:'(open)',c?fmtT(c.at):'']);});
     saveCsv('photo-shoot-signups.csv',rows);
   });
   $('dlLog').addEventListener('click',function(){
