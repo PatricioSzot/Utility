@@ -1,4 +1,4 @@
-# Family photo shoot sign-up: Vercel setup
+# Baddy family photo shoot sign-up: Vercel setup
 
 Files
   index.html      the page
