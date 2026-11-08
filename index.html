@@ -398,7 +398,8 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
   function same(a,b){return (a.pose||'')===(b.pose||'')&&(a.dress||'')===(b.dress||'')&&(a.props||[]).join()===(b.props||[]).join();}
   function updSave(){
     var my=mine(),b=$('saveDetails');
-    b.hidden=!(loaded&&my&&(photosDirty||!same(getD(),claims[my.id])));
+    b.hidden=!(loaded&&my);
+    if(my&&claims[my.id])b.disabled=busy||!(photosDirty||!same(getD(),claims[my.id]));
   }
   var refs=[],photosDirty=false,MAXP=3;
   function imgUrl(slot,i,pv,asAdmin){return API+'?img='+encodeURIComponent(slot)+'&i='+i+'&v='+encodeURIComponent(pv||'')+(asAdmin?'&admin='+encodeURIComponent(adminKey):'&cid='+encodeURIComponent(cid));}
@@ -461,7 +462,7 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
       if(r.status===200&&photosDirty)await savePhotos(my);
       say(r.status===200?'Details saved.':'That didn’t save. Try again.');}
     catch(e){say('That didn’t save. Try again.');}
-    finally{busy=false;b.disabled=false;await refresh();render();}
+    finally{busy=false;await refresh();render();}
   });
 
   var toast=$('toast');
