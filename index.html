@@ -90,6 +90,7 @@ dd{margin:0;min-width:0;overflow-wrap:anywhere}
 .pin.you i{width:14px;height:14px;background:var(--accent);box-shadow:0 0 0 2px var(--bg),0 0 0 9px var(--ring)}
 .pin .lb{position:absolute;top:0;left:15px;transform:translateY(-50%);white-space:nowrap;display:flex;flex-direction:column;font-size:13px;line-height:1.25;text-shadow:0 0 4px var(--bg),0 0 4px var(--bg),0 0 6px var(--bg)}
 .pin.l .lb{left:auto;right:15px;text-align:right}
+.pin.b .lb{top:auto;transform:none;left:-6px;top:14px}
 .pin .lb b{font-weight:500;color:var(--ink)}
 .pin.you .lb b{color:var(--accent)}
 .pin .lb small{font-size:12px;color:var(--muted)}
@@ -115,6 +116,7 @@ textarea::placeholder{color:var(--muted)}
 .slot .d{margin-top:2px;font-size:13px;line-height:1.4;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .slot .d.open{white-space:normal;overflow-wrap:anywhere}
 .refs{margin-top:10px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.refs .btn{min-height:44px;padding:0 18px}
 .refs .btn i{margin-right:6px;font-size:18px;vertical-align:-3px}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}
 .thumbs:empty{display:none}
@@ -141,6 +143,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .slot.mine .s{font-weight:500}
 .acts{display:flex;gap:8px;align-items:center}
 .log{display:flex;flex-direction:column;gap:14px}
+.log[hidden],.accbody[hidden]{display:none}
 .logbox{max-height:340px;overflow-y:auto;border-top:1px solid var(--line)}
 .entry{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45}
 .entry .w{color:var(--muted);font-variant-numeric:tabular-nums}
@@ -149,7 +152,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .mb{display:flex;align-items:flex-start;gap:12px;width:100vw;margin-left:calc(50% - 50vw);position:relative;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:none;-webkit-overflow-scrolling:touch;padding-bottom:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 .mb figure{margin:0;flex:0 0 auto;width:240px;}
 .mb figure.big{width:360px}
-.mb img{display:block;width:100%;height:auto}
+.mb img{display:block;width:100%;height:auto;max-height:380px;object-fit:cover}
 .skw .mb{width:100%;margin-left:0;cursor:grab}
 .mb.drag{scroll-snap-type:none;cursor:grabbing;user-select:none}
 .mb img{-webkit-user-drag:none;user-select:none}
@@ -253,7 +256,7 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
   <section>
     <h2>The plan</h2>
     <p>Please select one time slot below for your 30 minute shoot. It will be just you, me, Carlos, Kellen together in Kellen's apartment for the shoot. Couples/small groups are acceptable, but let's remain focused and supportive. After we photograph everyone in the studio, we'll composite everyone together into one large photo. We'll take a couple photos each and I'd like to get each of you access to a couple individual photos and the one large photo.</p>
-    <p>I have 30 minute time blocks for each individual and we have 15 people to photograph in one day. Kellen will have his work cut out for him, so my ask is that we're showing up prepared or early for your photoshoot with the time you need to get ready and we'll do last looks together.</p>
+    <p>I have 30 minute time blocks for each individual and we have a lot of people to photograph across two days. Kellen will have his work cut out for him, so my ask is that we're showing up prepared or early for your photoshoot with the time you need to get ready and we'll do last looks together.</p>
     <h3 class="trips-h">Dress notes</h3>
     <p>The category is self-actualized baddest kink, leather, skin biggest version of you, no fantasy cause in reality you are incredible and doing great and this is documentary.</p>
     <p>These are full-body portraits, so plan your look from your shoes up.</p>
@@ -291,7 +294,7 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
 
   <section>
     <dl>
-      <dt>Shoot</dt><dd>Kink / leather baddy photo shoot to celebrate and commemorate Pat's 32nd birthday</dd>
+      <dt>Shoot</dt><dd>Kink, leather, baddy friends photo shoot to celebrate Pat's 32nd birthday</dd>
       <dt>Photog</dt><dd>Kellen Gaughan (<a href="https://www.instagram.com/kellenmelon/" target="_blank" rel="noopener">@Kellenmelon</a>)</dd>
       <dt>Where</dt><dd>Kellen's home studio in Crown Heights<br>1188 Sterling Street, Apt 12, Brooklyn, NY</dd>
       <dt>Looks</dt><dd>Text Pat to coordinate</dd>
@@ -343,7 +346,7 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
       <button class="btn full" id="copyAddr" type="button">Copy address</button>
     </div>
     <p class="note" id="copyNote" role="status"></p>
-    <figure class="map"><div class="mapwrap" role="img" aria-label="Minimal map of the shoot area in Crown Heights with Downtown Brooklyn, The Exley, Sunrise Sunset Cafe and The NYC Eagle marked"><img class="lt" src="/map/map-light.jpg" alt="" width="1210" height="1603"><img class="dk" src="/map/map-dark.jpg" alt="" width="1210" height="1603"><span class="pin you" style="left:59.95%;top:92.51%"><i></i><span class="lb"><b>Photo shoot</b><small>Sterling St, approx.</small></span></span><span class="pin l" style="left:89.26%;top:63.0%"><i></i><span class="lb"><b>Sunrise Sunset Cafe</b><small>2.7 mi</small></span></span><span class="pin" style="left:10.74%;top:7.49%"><i></i><span class="lb"><b>The NYC Eagle</b><small>6.7 mi</small></span></span><span class="pin" style="left:27.64%;top:65.11%"><i></i><span class="lb"><b>Downtown Brooklyn</b><small>2.6 mi</small></span></span><span class="pin" style="left:61.57%;top:41.59%"><i></i><span class="lb"><b>The Exley</b><small>3.7 mi</small></span></span></div><figcaption>Straight-line distances from the shoot. Map data &copy; OpenStreetMap contributors.</figcaption></figure>
+    <figure class="map"><div class="mapwrap" role="img" aria-label="Minimal map of the shoot area in Crown Heights with Downtown Brooklyn, The Exley, Sunrise Sunset Cafe and The NYC Eagle marked"><img class="lt" src="/map/map-light.jpg" alt="" width="1210" height="1603"><img class="dk" src="/map/map-dark.jpg" alt="" width="1210" height="1603"><span class="pin you" style="left:59.95%;top:92.51%"><i></i><span class="lb"><b>Photo shoot</b><small>Sterling St, approx.</small></span></span><span class="pin l" style="left:89.26%;top:63.0%"><i></i><span class="lb"><b>Sunrise Sunset Cafe</b><small>2.7 mi</small></span></span><span class="pin" style="left:10.74%;top:7.49%"><i></i><span class="lb"><b>The NYC Eagle</b><small>6.7 mi</small></span></span><span class="pin b" style="left:27.64%;top:65.11%"><i></i><span class="lb"><b>Downtown Brooklyn</b><small>2.6 mi</small></span></span><span class="pin" style="left:61.57%;top:41.59%"><i></i><span class="lb"><b>The Exley</b><small>3.7 mi</small></span></span></div><figcaption>Straight-line distances from the shoot. Map data &copy; OpenStreetMap contributors.</figcaption></figure>
     <p>Getting around the city can be tough. If getting to or from the location is a blocker for your participation, please talk with Pat to see what accommodation can be made.</p>
   </section>
 
