@@ -104,7 +104,8 @@ textarea{width:100%;font:400 18px/1.4 var(--font);color:var(--ink);background:va
 textarea::placeholder{color:var(--muted)}
 .pose{display:flex;flex-direction:column;gap:12px;margin-top:6px}
 .pose textarea{margin-top:0}
-.pose label textarea{margin-top:8px}
+.pose label textarea{margin-top:10px}
+.pose .help{display:block;margin-top:8px}
 .pose .meta{margin-top:6px}
 .pills{display:flex;flex-wrap:wrap;gap:8px}
 .pill{font:500 16px/1 var(--font);color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:12px 18px;min-height:44px;cursor:pointer}
@@ -288,6 +289,7 @@ dd a{color:inherit;text-decoration:underline;text-underline-offset:3px}
         <button type="button" class="pill" aria-pressed="false">Ladder</button>
       </div>
       <label for="dressText"><span class="meta">Dress notes</span>
+        <span class="note help">Share the big pieces or the direction of your look so we don’t double up across the group. Planning a full dress, a big cowboy hat, a fur coat, a pair of wings? Tell us here to 1. lock it in and 2. help us shape the full picture. (Thanks for letting me be a Scorpio here.)</span>
         <textarea id="dressText" rows="2" maxlength="400" placeholder="What you’re wearing"></textarea>
       </label>
       <button type="button" class="btn full" id="saveDetails" hidden>Save changes</button>
