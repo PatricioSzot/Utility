@@ -160,6 +160,8 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .mb:focus-visible{outline:2px solid var(--ok);outline-offset:4px}
 .skw{position:relative;width:100vw;margin-left:calc(50% - 50vw)}
 .sk{display:flex;justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:14px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;cursor:grab}
+.skf{position:relative;flex:0 0 auto;margin:0 auto}
+.skf .tag{position:absolute;transform:translate(-50%,-50%);width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);font:500 12px/22px var(--font);text-align:center;pointer-events:none;box-shadow:0 0 0 2px var(--bg)}
 .sk.drag{cursor:grabbing;user-select:none}
 .sk img{display:block;flex:0 0 auto;margin:0 auto;height:480px;width:auto;max-width:none;-webkit-user-drag:none;user-select:none}
 .skw .sc{position:absolute;top:0;bottom:14px;width:min(36px,9vw);pointer-events:none;opacity:0;transition:opacity .3s;z-index:1;display:flex;align-items:center}
@@ -264,7 +266,7 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
   <section>
     <h2>Sketch</h2>
     <div class="skw" id="skw"><div class="sk" id="sk" role="region" aria-label="Sketch, scrolls sideways" tabindex="0">
-      <img src="moodboard/sketch.webp" width="1600" height="703" alt="Black-and-white collage of a group of people in leather, athletic and formal looks posed around a marble angel statue, dated 2026" decoding="async">
+      <div class="skf"><img src="moodboard/sketch.webp" width="1600" height="703" alt="Labeled A to O from left to right. Black-and-white collage of a group of people in leather, athletic and formal looks posed around a marble angel statue, dated 2026" decoding="async"><div aria-hidden="true"><span class="tag" style="left:8.62%;top:49.79%">A</span><span class="tag" style="left:12.00%;top:55.76%">B</span><span class="tag" style="left:15.50%;top:33.57%">C</span><span class="tag" style="left:22.62%;top:43.24%">D</span><span class="tag" style="left:30.12%;top:55.76%">E</span><span class="tag" style="left:34.38%;top:45.52%">F</span><span class="tag" style="left:44.12%;top:51.49%">G</span><span class="tag" style="left:50.38%;top:37.55%">H</span><span class="tag" style="left:59.06%;top:50.36%">I</span><span class="tag" style="left:62.62%;top:45.52%">J</span><span class="tag" style="left:69.75%;top:53.20%">K</span><span class="tag" style="left:73.50%;top:26.46%">L</span><span class="tag" style="left:80.50%;top:63.44%">M</span><span class="tag" style="left:83.88%;top:53.49%">N</span><span class="tag" style="left:91.00%;top:41.54%">O</span></div></div>
     </div><span class="sc l" aria-hidden="true"></span><span class="sc r" aria-hidden="true"></span></div>
   </section>
 
@@ -312,7 +314,7 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
     <p class="note" id="hint" role="status" hidden></p>
     <div class="pose">
       <h3 class="meta">Pose preferences</h3>
-      <p class="note">Share some ideas for how you’d feel comfortable posing and ideas for your portrait. Bring your wild ideas. You should make this photo <em>yours</em>.</p>
+      <p class="note">Share some ideas for how you’d feel comfortable posing and ideas for your portrait. Bring your wild ideas. You should make this photo <em>yours</em>. Use the letters in the sketch to refer to anyone.</p>
       <textarea id="poseText" rows="3" maxlength="600" aria-label="Pose and portrait ideas" placeholder="Poses, mood, references"></textarea>
       <span class="meta">Furniture request</span>
       <div class="pills" id="pills" role="group" aria-label="Furniture request">
