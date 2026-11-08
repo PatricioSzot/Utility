@@ -125,8 +125,17 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .mb figure.big{width:360px}
 .mb img{display:block;width:100%;height:auto}
 .mb:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
-.sk{display:flex;justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-.sk img{display:block;flex:0 0 auto;margin:0 auto;height:240px;width:auto;max-width:none;border-radius:6px}
+.skw{position:relative;width:100vw;margin-left:calc(50% - 50vw)}
+.sk{display:flex;justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:14px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;cursor:grab}
+.sk.drag{cursor:grabbing;user-select:none}
+.sk img{display:block;flex:0 0 auto;margin:0 auto;height:480px;width:auto;max-width:none;-webkit-user-drag:none;user-select:none}
+.skw .sc{position:absolute;top:0;bottom:14px;width:min(120px,26vw);pointer-events:none;opacity:0;transition:opacity .3s;z-index:1;display:flex;align-items:center}
+.skw .sc.l{left:0;justify-content:flex-start;padding-left:14px;background:linear-gradient(to right,var(--bg) 0%,color-mix(in srgb,var(--bg) 82%,transparent) 28%,color-mix(in srgb,var(--bg) 45%,transparent) 62%,transparent 100%)}
+.skw .sc.r{right:0;justify-content:flex-end;padding-right:14px;background:linear-gradient(to left,var(--bg) 0%,color-mix(in srgb,var(--bg) 82%,transparent) 28%,color-mix(in srgb,var(--bg) 45%,transparent) 62%,transparent 100%)}
+.skw .sc i{width:12px;height:12px;border-top:2px solid var(--ink);border-right:2px solid var(--ink);opacity:.75}
+.skw .sc.r i{transform:rotate(45deg);margin-right:4px}
+.skw .sc.l i{transform:rotate(-135deg);margin-left:4px}
+.skw.cl .sc.l,.skw.cr .sc.r{opacity:1}
 .sk:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
 .pick{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;background:var(--bg);padding-block:10px;margin-top:-10px;box-shadow:0 1px 0 var(--line)}
 .pick time{font:600 12px/1.2 var(--font);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
@@ -195,9 +204,9 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 
   <section>
     <h2>Sketch</h2>
-    <div class="sk" id="sk" role="region" aria-label="Sketch, scrolls sideways" tabindex="0">
+    <div class="skw" id="skw"><div class="sk" id="sk" role="region" aria-label="Sketch, scrolls sideways" tabindex="0">
       <img src="moodboard/sketch.webp" width="1600" height="703" alt="Black-and-white collage of a group of people in leather, athletic and formal looks posed around a marble angel statue, dated 2026" decoding="async">
-    </div>
+    </div><span class="sc l" aria-hidden="true"><i></i></span><span class="sc r" aria-hidden="true"><i></i></span></div>
     <h3 class="trips-h">Dress notes</h3>
     <p>The category is baddest kink, leather, skin bitches in all the land. Wear whatever makes you feel like the biggest version of you. So far we have leather and a set of wings, full leather dom/sub portraits, and tons of beautiful tattoos to show off.</p>
     <p>These are full-body portraits, so plan your look from your shoes up.</p>
@@ -465,10 +474,16 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 
 <script>
 (function(){
-  var sc=document.getElementById('sk');if(!sc)return;var im=sc.querySelector('img');
-  function center(){sc.scrollLeft=Math.max(0,(sc.scrollWidth-sc.clientWidth)/2);}
+  var sc=document.getElementById('sk');if(!sc)return;var im=sc.querySelector('img'),w=document.getElementById('skw');
+  function upd(){var max=sc.scrollWidth-sc.clientWidth;w.classList.toggle('cl',sc.scrollLeft>8);w.classList.toggle('cr',sc.scrollLeft<max-8);}
+  function center(){sc.scrollLeft=Math.max(0,(sc.scrollWidth-sc.clientWidth)/2);upd();}
   if(im.complete)center();else im.addEventListener('load',center);
-  addEventListener('load',center);
+  addEventListener('load',center);addEventListener('resize',upd);sc.addEventListener('scroll',upd,{passive:true});
+  var down=false,x0=0,s0=0;
+  sc.addEventListener('pointerdown',function(e){if(e.pointerType!=='mouse')return;down=true;x0=e.clientX;s0=sc.scrollLeft;sc.classList.add('drag');});
+  addEventListener('pointermove',function(e){if(down)sc.scrollLeft=s0-(e.clientX-x0);});
+  addEventListener('pointerup',function(){down=false;sc.classList.remove('drag');});
+  sc.addEventListener('keydown',function(e){if(e.key==='ArrowRight'){sc.scrollBy({left:240,behavior:'smooth'});e.preventDefault();}else if(e.key==='ArrowLeft'){sc.scrollBy({left:-240,behavior:'smooth'});e.preventDefault();}});
 })();
 </script>
 </body></html>
