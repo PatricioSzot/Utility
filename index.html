@@ -388,7 +388,25 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
   nameEl.addEventListener('input',function(){
     try{localStorage.setItem('shoot-name',nameEl.value);}catch(e){}
     $('hint').hidden=true;
+    clearTimeout(recallT);recallT=setTimeout(recall,700);
   });
+  var recallT=null,recalling=false,lastTried='';
+  async function recall(){
+    var n=nameEl.value.trim().replace(/\s+/g,' ').toLowerCase();
+    if(n.length<2||busy||recalling||!loaded||mine()||n===lastTried)return;
+    lastTried=n;recalling=true;
+    try{
+      var r=await api('POST',{action:'recall',slot:'sat-1700',name:nameEl.value});
+      if(r.status===200&&r.data.cid&&!mine()){
+        cid=r.data.cid;try{localStorage.setItem('shoot-cid',cid);}catch(e){}
+        touched=false;photosDirty=false;refs=[];
+        await refresh();
+        var my=mine();
+        if(my){setD(claims[my.id]);touched=true;try{localStorage.setItem('shoot-details',JSON.stringify(getD()));}catch(e){}syncRefs();updSave();say('Welcome back. Your booking is loaded, edit anything below.');var el=document.querySelector('.slot.mine');if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',behavior:'smooth'});}
+      }
+    }catch(e){}
+    finally{recalling=false;}
+  }
 
   var poseEl=$('poseText'),dressEl=$('dressText'),pills=[].slice.call(document.querySelectorAll('#pills .pill')),touched=false,expanded=false;
   function getD(){return{pose:poseEl.value.trim(),props:pills.filter(function(p){return p.getAttribute('aria-pressed')==='true';}).map(function(p){return p.textContent;}),dress:dressEl.value.trim()};}
@@ -588,6 +606,7 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
     if(busy)return;
     var name=nameEl.value.trim();
     if(!name){var h=$('hint');h.textContent='Add your name first so everyone can see who has each time.';h.hidden=false;nameEl.focus();return;}
+    if(!mine()){lastTried='';await recall();}
     var prev=mine();
     busy=true;say('');render();
     try{
@@ -615,7 +634,7 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
   }
 
   /* ---- admin-only log panel (open the page with ?admin=YOUR_KEY) ---- */
-  var ACTION={claim:'Booked',move:'Moved to',update:'Updated details for',photos:'Updated photos for','release':'Released','release-by-editor':'Released by Pat'};
+  var ACTION={claim:'Booked',move:'Moved to',update:'Updated details for',photos:'Updated photos for',recall:'Reopened booking','release':'Released','release-by-editor':'Released by Pat'};
   function fmtT(iso){try{return new Date(iso).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'});}catch(e){return iso;}}
   function renderLog(){
     var box=$('logBox');box.textContent='';

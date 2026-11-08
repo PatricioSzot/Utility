@@ -99,6 +99,16 @@ module.exports = async (req, res) => {
       let b = req.body;
       if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }
       b = b || {};
+      if (b.action === 'recall') {
+        const norm = (x) => String(x || '').trim().replace(/\s+/g, ' ').toLowerCase();
+        const want = norm(b.name);
+        if (!want) return res.status(400).json({ error: 'name_required' });
+        const claims = await allClaims();
+        const id = Object.keys(claims).find((k) => norm(claims[k].name) === want);
+        if (!id) return res.status(404).json({ error: 'none' });
+        await log({ t: new Date().toISOString(), action: 'recall', slot: id, label: String(b.label || '').slice(0, 40), name: claims[id].name });
+        return res.status(200).json({ ok: true, cid: claims[id].cid, slot: id });
+      }
       const slot = b.slot;
       if (!SLOT_RE.test(slot || '')) return res.status(400).json({ error: 'bad_slot' });
       const label = String(b.label || '').slice(0, 40);
