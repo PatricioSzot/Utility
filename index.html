@@ -10,15 +10,17 @@
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:title" content="Family baddy photo shoot">
 <meta property="og:description" content="Book your time slot for Pat's 32nd birthday photo shoot, Saturday and Sunday, November 28–29, 2026.">
-<meta property="og:image" content="https://familyphotoshoot.vercel.app/og-share.jpg">
+<meta property="og:image" content="https://familyphotoshoot.vercel.app/og-walk.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Tattooed man in sunglasses lying in a white bed">
+<meta property="og:image:alt" content="Blurred silhouettes of people in black coats walking across a white set">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Family baddy photo shoot">
 <meta name="twitter:description" content="Book your time slot for Pat's 32nd birthday photo shoot, Saturday and Sunday, November 28–29, 2026.">
-<meta name="twitter:image" content="https://familyphotoshoot.vercel.app/og-share.jpg">
+<meta name="twitter:image" content="https://familyphotoshoot.vercel.app/og-walk.jpg">
 
+<script>try{var t=localStorage.getItem("shoot-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -170,10 +172,16 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .day .dc{font:600 12px/1.2 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .trips-h{font:600 12px/1.2 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 0}
 dd a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+header{position:relative}
+header .meta{padding-right:56px}
+.theme{position:absolute;top:-4px;right:0;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer;font-size:20px;line-height:1}
+.theme:hover{border-color:var(--ink)}
+.theme i{line-height:1}
 </style></head><body>
 
 <div class="wrap">
   <header>
+    <button class="theme" id="themeBtn" type="button" aria-label="Switch to light mode"><i class="ri-sun-line" aria-hidden="true"></i></button>
     <p class="meta">Saturday &amp; Sunday, November 28–29, 2026</p>
     <h1>Family baddy photo shoot</h1>
   </header>
@@ -543,6 +551,16 @@ dd a{color:inherit;text-decoration:underline;text-underline-offset:3px}
     saveCsv('photo-shoot-log.csv',rows);
   });
   if(isAdmin)$('logSection').hidden=false;
+
+  /* theme toggle */
+  (function(){
+    var root=document.documentElement,btn=$('themeBtn'),mq=matchMedia('(prefers-color-scheme: dark)');
+    function cur(){var t=root.getAttribute('data-theme');return t||(mq.matches?'dark':'light');}
+    function paint(){var d=cur()==='dark';btn.querySelector('i').className=d?'ri-sun-line':'ri-moon-line';btn.setAttribute('aria-label',d?'Switch to light mode':'Switch to dark mode');}
+    btn.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('shoot-theme',n);}catch(e){}paint();});
+    if(mq.addEventListener)mq.addEventListener('change',function(){if(!root.getAttribute('data-theme'))paint();});
+    paint();
+  })();
 
   render();
   refresh();
