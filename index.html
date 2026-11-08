@@ -133,11 +133,11 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .entry .w{color:var(--muted);font-variant-numeric:tabular-nums}
 .entry b{font-weight:500}
 @media (prefers-reduced-motion:no-preference){.btn{transition:background .15s,color .15s}}
-.mb{display:flex;align-items:flex-start;gap:12px;width:100vw;margin-left:calc(50% - 50vw);padding-inline:calc(50vw - 120px);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding-bottom:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-.mb figure{margin:0;flex:0 0 auto;width:240px;scroll-snap-align:center}
+.mb{display:flex;align-items:flex-start;gap:12px;width:100vw;margin-left:calc(50% - 50vw);padding-inline:max(16px,calc((100vw - 560px)/2));scroll-padding-inline:max(16px,calc((100vw - 560px)/2));overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding-bottom:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.mb figure{margin:0;flex:0 0 auto;width:240px;scroll-snap-align:start}
 .mb figure.big{width:360px}
 .mb img{display:block;width:100%;height:auto}
-.skw .mb{width:100%;margin-left:0;cursor:grab;scroll-padding-inline:0}
+.skw .mb{width:100%;margin-left:0;cursor:grab}
 .mb.drag{scroll-snap-type:none;cursor:grabbing;user-select:none}
 .mb img{-webkit-user-drag:none;user-select:none}
 .mb:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
@@ -167,10 +167,10 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
   <header>
     <p class="meta">Saturday &amp; Sunday, November 28–29, 2026</p>
     <h1>Family baddy photo shoot</h1>
-    <p class="sub">Pat's 32nd birthday. Kink / leather baddy shoot, photographed by Kellen Gaughan</p>
   </header>
 
   <section>
+    <p class="sub">Pat's 32nd birthday. Kink / leather baddy shoot, photographed by Kellen Gaughan</p>
     <p>First and foremost, I'm so excited to get all my favorite people in the same photograph. Each of you have been important to me this last year and I cherish our times together. I'm very proud to call each of you my friend and excited for what's to come.</p>
   </section>
 
