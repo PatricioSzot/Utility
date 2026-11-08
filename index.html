@@ -279,7 +279,7 @@ dd a{color:inherit;text-decoration:underline;text-underline-offset:3px}
     <p class="note" id="hint" role="status" hidden></p>
     <div class="pose">
       <h3 class="meta">Pose preferences</h3>
-      <p class="note">Share some ideas for how you’d want to pose and ideas for your portrait. Furniture and accessories can help us make a plan for how to compose the whole group.</p>
+      <p class="note">Share some ideas for how you’d feel comfortable posing and ideas for your portrait. Bring your wild ideas. You should make this photo <em>yours</em>.</p>
       <textarea id="poseText" rows="3" maxlength="600" aria-label="Pose and portrait ideas" placeholder="Poses, mood, references"></textarea>
       <span class="meta">Furniture request</span>
       <div class="pills" id="pills" role="group" aria-label="Furniture request">
@@ -287,9 +287,10 @@ dd a{color:inherit;text-decoration:underline;text-underline-offset:3px}
         <button type="button" class="pill" aria-pressed="false">Stool</button>
         <button type="button" class="pill" aria-pressed="false">Chair</button>
         <button type="button" class="pill" aria-pressed="false">Ladder</button>
+        <button type="button" class="pill" aria-pressed="false">Whatever</button>
       </div>
       <label for="dressText"><span class="meta">Dress notes</span>
-        <span class="note help">Share the big pieces or the direction of your look so we don’t double up across the group. Planning a full dress, a big cowboy hat, a fur coat, a pair of wings? Tell us here to 1. lock it in and 2. help us shape the full picture. (Thanks for letting me be a Scorpio here.)</span>
+        <span class="note help">If you are planning a full dress, a big cowboy hat, a fur coat, or a pair of wings, for example, let us know. This will help you 1. lock it in and 2. help us shape the full picture. (Thanks for letting me be a Scorpio here.)</span>
         <textarea id="dressText" rows="2" maxlength="400" placeholder="What you’re wearing"></textarea>
       </label>
       <button type="button" class="btn full" id="saveDetails" hidden>Save changes</button>
@@ -363,7 +364,7 @@ dd a{color:inherit;text-decoration:underline;text-underline-offset:3px}
   }
   function onDetails(){touched=true;try{localStorage.setItem('shoot-details',JSON.stringify(getD()));}catch(e){}updSave();}
   poseEl.addEventListener('input',onDetails);dressEl.addEventListener('input',onDetails);
-  pills.forEach(function(p){p.addEventListener('click',function(){p.setAttribute('aria-pressed',p.getAttribute('aria-pressed')==='true'?'false':'true');onDetails();});});
+  pills.forEach(function(p){p.addEventListener('click',function(){var on=p.getAttribute('aria-pressed')!=='true';p.setAttribute('aria-pressed',on?'true':'false');if(on)pills.forEach(function(o){if(o!==p&&((p.textContent==='Whatever')||(o.textContent==='Whatever')))o.setAttribute('aria-pressed','false');});onDetails();});});
   $('saveDetails').addEventListener('click',async function(){
     var my=mine();if(!my||busy)return;busy=true;var b=$('saveDetails');b.disabled=true;
     try{var d=getD();var r=await api('POST',Object.assign({action:'details',slot:my.id,label:my.full,cid:cid},d));

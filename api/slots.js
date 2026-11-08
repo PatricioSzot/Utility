@@ -25,7 +25,7 @@ async function allClaims() {
 }
 
 const isAdmin = (key) => !!ADMIN_KEY && typeof key === 'string' && key === ADMIN_KEY;
-const PROPS = ['Crate', 'Stool', 'Chair', 'Ladder'];
+const PROPS = ['Crate', 'Stool', 'Chair', 'Ladder', 'Whatever'];
 function details(b) {
   const props = Array.isArray(b.props) ? PROPS.filter((p) => b.props.includes(p)) : [];
   return {
