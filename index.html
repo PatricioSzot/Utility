@@ -114,6 +114,16 @@ textarea::placeholder{color:var(--muted)}
 .pill[aria-pressed=true]{background:var(--line);border-color:var(--line);color:var(--ink)}
 .slot .d{margin-top:2px;font-size:13px;line-height:1.4;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .slot .d.open{white-space:normal;overflow-wrap:anywhere}
+.refs{margin-top:10px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.refs .btn i{margin-right:6px;font-size:18px;vertical-align:-3px}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs:empty{display:none}
+.thumb{position:relative;width:64px;height:64px;border-radius:6px;background:var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;border-radius:6px;display:block}
+.thumb .rm{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;padding:0}
+.slot .ph{display:flex;gap:6px;margin-top:8px}
+.slot .ph a{display:block;width:44px;height:44px;border-radius:4px;overflow:hidden;background:var(--line)}
+.slot .ph img{width:100%;height:100%;object-fit:cover;display:block}
 .count{display:flex;flex-direction:column;gap:10px}
 .ticks{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;height:6px}
 .ticks span{background:var(--line);border-radius:1px}
@@ -315,6 +325,11 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
         <span class="note help">If you are planning a full dress, a big cowboy hat, a fur coat, flowers, or a pair of wings, for example, let us know. This will help you 1. lock it in and 2. help us shape the full picture. (Thanks for letting me be a Scorpio here.)</span>
         <textarea id="dressText" rows="2" maxlength="400" placeholder="What you’re wearing"></textarea>
       </label>
+      <div class="refs">
+        <button type="button" class="btn quiet sm" id="addRef"><i class="ri-image-add-line" aria-hidden="true"></i>Add reference photos</button>
+        <input type="file" id="refFile" accept="image/*" multiple hidden>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
       <button type="button" class="btn full" id="saveDetails" hidden>Save changes</button>
     </div>
     <ol id="slots"></ol>
@@ -383,7 +398,59 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
   function same(a,b){return (a.pose||'')===(b.pose||'')&&(a.dress||'')===(b.dress||'')&&(a.props||[]).join()===(b.props||[]).join();}
   function updSave(){
     var my=mine(),b=$('saveDetails');
-    b.hidden=!(loaded&&my&&!same(getD(),claims[my.id]));
+    b.hidden=!(loaded&&my&&(photosDirty||!same(getD(),claims[my.id])));
+  }
+  var refs=[],photosDirty=false,MAXP=3;
+  function imgUrl(slot,i,pv,asAdmin){return API+'?img='+encodeURIComponent(slot)+'&i='+i+'&v='+encodeURIComponent(pv||'')+(asAdmin?'&admin='+encodeURIComponent(adminKey):'&cid='+encodeURIComponent(cid));}
+  function renderThumbs(){
+    var box=$('thumbs');box.textContent='';
+    refs.forEach(function(r,n){
+      var d=document.createElement('div');d.className='thumb';
+      var im=document.createElement('img');im.alt='Reference photo '+(n+1);im.src=r.kind==='new'?r.data:r.url;
+      var x=document.createElement('button');x.type='button';x.className='rm';x.setAttribute('aria-label','Remove photo '+(n+1));x.innerHTML='<i class="ri-close-line" aria-hidden="true"></i>';
+      x.addEventListener('click',function(){refs.splice(n,1);photosDirty=true;renderThumbs();updSave();});
+      d.appendChild(im);d.appendChild(x);box.appendChild(d);
+    });
+    $('addRef').hidden=refs.length>=MAXP;
+  }
+  function syncRefs(){
+    if(photosDirty)return;
+    var my=mine();
+    if(!my){if(refs.some(function(r){return r.kind==='remote';})){refs=refs.filter(function(r){return r.kind==='new';});renderThumbs();}return;}
+    var c=claims[my.id];refs=[];
+    for(var i=0;i<(c.np||0);i++)refs.push({kind:'remote',idx:i,url:imgUrl(my.id,i,c.pv,false)});
+    renderThumbs();
+  }
+  async function shrink(file){
+    var bmp;
+    try{bmp=await createImageBitmap(file,{imageOrientation:'from-image'});}
+    catch(e){bmp=await new Promise(function(ok,no){var im=new Image(),u=URL.createObjectURL(file);im.onload=function(){ok(im);};im.onerror=no;im.src=u;});}
+    var w=bmp.width||bmp.naturalWidth,h=bmp.height||bmp.naturalHeight,sc=Math.min(1,900/Math.max(w,h));
+    var out='';
+    for(var tries=0;tries<6;tries++){
+      var cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(w*sc));cv.height=Math.max(1,Math.round(h*sc));
+      var g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);g.drawImage(bmp,0,0,cv.width,cv.height);
+      for(var q=.8;q>=.45;q-=.1){out=cv.toDataURL('image/jpeg',q);if(out.length<=200000)return out;}
+      sc*=.8;
+    }
+    return out.length<=225000?out:null;
+  }
+  $('addRef').addEventListener('click',function(){$('refFile').click();});
+  $('refFile').addEventListener('change',async function(){
+    var files=[].slice.call(this.files||[]);this.value='';
+    var bad=false;
+    for(var i=0;i<files.length&&refs.length<MAXP;i++){
+      try{var d=await shrink(files[i]);if(d)refs.push({kind:'new',data:d});else bad=true;}catch(e){bad=true;}
+    }
+    photosDirty=true;renderThumbs();updSave();
+    if(bad)say('That photo didn’t load. Try another.');
+  });
+  renderThumbs();
+  function photoItems(){return refs.map(function(r){return r.kind==='new'?{data:r.data}:{keep:r.idx};});}
+  async function savePhotos(slot){
+    var r=await api('POST',{action:'photos',slot:slot.id,label:slot.full,cid:cid,items:photoItems()});
+    if(r.status!==200)throw new Error('photos');
+    photosDirty=false;
   }
   function onDetails(){touched=true;try{localStorage.setItem('shoot-details',JSON.stringify(getD()));}catch(e){}updSave();}
   poseEl.addEventListener('input',onDetails);dressEl.addEventListener('input',onDetails);
@@ -391,6 +458,7 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
   $('saveDetails').addEventListener('click',async function(){
     var my=mine();if(!my||busy)return;busy=true;var b=$('saveDetails');b.disabled=true;
     try{var d=getD();var r=await api('POST',Object.assign({action:'details',slot:my.id,label:my.full,cid:cid},d));
+      if(r.status===200&&photosDirty)await savePhotos(my);
       say(r.status===200?'Details saved.':'That didn’t save. Try again.');}
     catch(e){say('That didn’t save. Try again.');}
     finally{busy=false;b.disabled=false;await refresh();render();}
@@ -447,6 +515,11 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
       else s.textContent='Open';
       left.appendChild(t);left.appendChild(s);
       if(c&&(isMine||isAdmin)){var dt=dText(c);if(dt){var dd=document.createElement('div');dd.className='d'+(expanded?' open':'');dd.textContent=dt;dd.title='Tap to '+(expanded?'collapse':'expand');dd.addEventListener('click',function(){expanded=!expanded;render();});left.appendChild(dd);}}
+      if(c&&c.np>0&&(isMine||isAdmin)){
+        var ph=document.createElement('div');ph.className='ph';
+        for(var pi=0;pi<c.np;pi++){var u=imgUrl(sl.id,pi,c.pv,!isMine);var a=document.createElement('a');a.href=u;a.target='_blank';a.rel='noopener';a.setAttribute('aria-label','Reference photo '+(pi+1));var im=document.createElement('img');im.src=u;im.alt='';im.loading='lazy';a.appendChild(im);ph.appendChild(a);}
+        left.appendChild(ph);
+      }
       var acts=document.createElement('div');acts.className='acts';
 
       if(loaded){
@@ -504,6 +577,7 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
       notConfigured=false;claims=r.data.slots||{};loaded=true;stale=false;
       var mm=Object.keys(claims).filter(function(k){return claims[k].mine;})[0];
       if(mm&&!touched){setD(claims[mm]);touched=true;}
+      syncRefs();
       if(isAdmin&&r.data.log){logEntries=r.data.log;renderLog();}
     }catch(e){stale=true;}
     render();
@@ -519,7 +593,11 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
       var r=await api('POST',Object.assign({action:'claim',slot:slot.id,label:slot.full,name:name,cid:cid},getD()));
       if(r.status===409){say(slot.full+' was just taken'+(r.data.by?' by '+r.data.by:'')+'. Choose another time.');}
       else if(r.status!==200){say('That didn’t save, and nothing was changed. Try again.');}
-      else{say((prev?'Moved to ':'You’re booked for ')+slot.full+'.');}
+      else{
+        var msg=(prev?'Moved to ':'You’re booked for ')+slot.full+'.';
+        if(photosDirty){try{await savePhotos(slot);}catch(e){msg='Booked, but the photos didn’t save. Try again.';}}
+        say(msg);
+      }
     }catch(err){say('That didn’t save, and nothing was changed. Try again.');}
     finally{busy=false;await refresh();render();}
   }
@@ -536,7 +614,7 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
   }
 
   /* ---- admin-only log panel (open the page with ?admin=YOUR_KEY) ---- */
-  var ACTION={claim:'Booked',move:'Moved to',update:'Updated details for','release':'Released','release-by-editor':'Released by Pat'};
+  var ACTION={claim:'Booked',move:'Moved to',update:'Updated details for',photos:'Updated photos for','release':'Released','release-by-editor':'Released by Pat'};
   function fmtT(iso){try{return new Date(iso).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'});}catch(e){return iso;}}
   function renderLog(){
     var box=$('logBox');box.textContent='';
@@ -559,13 +637,13 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
     setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
   }
   $('dlSheet').addEventListener('click',function(){
-    var rows=[['Slot','Time','Name','Booked at (ET)','Furniture request','Pose ideas','Dress notes']];
-    SLOTS.forEach(function(sl){var c=claims[sl.id];rows.push([sl.id,sl.full,c?c.name:'(open)',c?fmtT(c.at):'',c?(c.props||[]).join(', '):'',c?c.pose||'':'',c?c.dress||'':'']);});
+    var rows=[['Slot','Time','Name','Booked at (ET)','Furniture request','Pose ideas','Dress notes','Reference photos']];
+    SLOTS.forEach(function(sl){var c=claims[sl.id];rows.push([sl.id,sl.full,c?c.name:'(open)',c?fmtT(c.at):'',c?(c.props||[]).join(', '):'',c?c.pose||'':'',c?c.dress||'':'',c?c.np||0:'']);});
     saveCsv('photo-shoot-signups.csv',rows);
   });
   $('dlLog').addEventListener('click',function(){
-    var rows=[['Timestamp (ET)','Action','Slot','Time','Name','From slot','Furniture request','Pose ideas','Dress notes']];
-    logEntries.forEach(function(e){rows.push([fmtT(e.t),e.action,e.slot,e.label,e.name,e.fromSlot||'',(e.props||[]).join(', '),e.pose||'',e.dress||'']);});
+    var rows=[['Timestamp (ET)','Action','Slot','Time','Name','From slot','Furniture request','Pose ideas','Dress notes','Reference photos']];
+    logEntries.forEach(function(e){rows.push([fmtT(e.t),e.action,e.slot,e.label,e.name,e.fromSlot||'',(e.props||[]).join(', '),e.pose||'',e.dress||'',e.photos==null?'':e.photos]);});
     saveCsv('photo-shoot-log.csv',rows);
   });
   if(isAdmin)$('logSection').hidden=false;

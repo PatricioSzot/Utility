@@ -34,6 +34,17 @@ function details(b) {
     dress: String(b.dress || '').trim().slice(0, 400),
   };
 }
+const MAX_PH = 3;
+const MAX_LEN = 230000;
+const JPEG_RE = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/;
+async function getPhotos(cid) {
+  try {
+    const raw = await redis(['HGET', 'photos', cid]);
+    if (!raw) return { v: '', imgs: [] };
+    const j = JSON.parse(raw);
+    return { v: j.v || '', imgs: Array.isArray(j.imgs) ? j.imgs : [] };
+  } catch (e) { return { v: '', imgs: [] }; }
+}
 const goodCid = (c) => typeof c === 'string' && c.length >= 8 && c.length <= 64;
 
 async function log(entry) {
@@ -49,6 +60,20 @@ module.exports = async (req, res) => {
   try {
     if (req.method === 'GET') {
       const cid = req.query && req.query.cid;
+      if (req.query && req.query.img) {
+        const slotId = String(req.query.img);
+        if (!SLOT_RE.test(slotId)) return res.status(400).json({ error: 'bad_slot' });
+        const raw = await redis(['HGET', 'slots', slotId]);
+        if (!raw) return res.status(404).json({ error: 'none' });
+        const rec = JSON.parse(raw);
+        if (!(isAdmin(req.query.admin) || (goodCid(cid) && rec.cid === cid))) return res.status(403).json({ error: 'not_yours' });
+        const ph = await getPhotos(rec.cid);
+        const data = ph.imgs[parseInt(req.query.i, 10)];
+        if (!data) return res.status(404).json({ error: 'none' });
+        res.setHeader('Content-Type', 'image/jpeg');
+        res.setHeader('Cache-Control', 'private, max-age=3600');
+        return res.status(200).send(Buffer.from(data, 'base64'));
+      }
       const claims = await allClaims();
       const slots = {};
       for (const k of Object.keys(claims)) {
@@ -58,6 +83,8 @@ module.exports = async (req, res) => {
           slots[k].pose = claims[k].pose || '';
           slots[k].props = claims[k].props || [];
           slots[k].dress = claims[k].dress || '';
+          slots[k].np = claims[k].np || 0;
+          slots[k].pv = claims[k].pv || '';
         }
       }
       const body = { slots };
@@ -84,7 +111,8 @@ module.exports = async (req, res) => {
         const claims = await allClaims();
         const prevId = Object.keys(claims).find((k) => claims[k].cid === b.cid);
         const d = details(b);
-        const won = await redis(['HSETNX', 'slots', slot, JSON.stringify({ name, cid: b.cid, at: now, ...d })]);
+        const ph = await getPhotos(b.cid);
+        const won = await redis(['HSETNX', 'slots', slot, JSON.stringify({ name, cid: b.cid, at: now, ...d, np: ph.imgs.length, pv: ph.v })]);
         if (won !== 1) {
           const cur = (await allClaims())[slot];
           return res.status(409).json({ error: 'taken', by: cur ? cur.name : '' });
@@ -103,6 +131,30 @@ module.exports = async (req, res) => {
         await redis(['HSET', 'slots', slot, JSON.stringify({ ...cur, ...d })]);
         await log({ t: now, action: 'update', slot, label, name: cur.name, ...d });
         return res.status(200).json({ ok: true });
+      }
+
+      if (b.action === 'photos') {
+        const raw = await redis(['HGET', 'slots', slot]);
+        if (!raw) return res.status(404).json({ error: 'no_slot' });
+        const cur = JSON.parse(raw);
+        if (!(goodCid(b.cid) && cur.cid === b.cid)) return res.status(403).json({ error: 'not_yours' });
+        const items = Array.isArray(b.items) ? b.items.slice(0, 8) : [];
+        const old = (await getPhotos(b.cid)).imgs;
+        const imgs = [];
+        for (const it of items) {
+          if (imgs.length >= MAX_PH) break;
+          if (it && Number.isInteger(it.keep) && old[it.keep]) imgs.push(old[it.keep]);
+          else if (it && typeof it.data === 'string' && it.data.length <= MAX_LEN) {
+            const m = JPEG_RE.exec(it.data);
+            if (m) imgs.push(m[1]);
+          }
+        }
+        let v = '';
+        if (imgs.length) { v = now; await redis(['HSET', 'photos', b.cid, JSON.stringify({ v, imgs })]); }
+        else await redis(['HDEL', 'photos', b.cid]);
+        await redis(['HSET', 'slots', slot, JSON.stringify({ ...cur, np: imgs.length, pv: v })]);
+        await log({ t: now, action: 'photos', slot, label, name: cur.name, photos: imgs.length });
+        return res.status(200).json({ ok: true, np: imgs.length });
       }
 
       if (b.action === 'release') {
