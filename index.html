@@ -175,9 +175,22 @@ dd a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 ::view-transition-new(root){z-index:2}
 html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:background-color .6s ease,color .6s ease,border-color .6s ease,box-shadow .6s ease,fill .6s ease,stroke .6s ease!important}
 .skw{margin-top:16px}
+.acc{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;background:none;border:0;padding:6px 0;color:var(--ink);cursor:pointer;text-align:left}
+.acc i{font-size:24px;line-height:1;color:var(--muted);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.acc[aria-expanded=true] i{transform:rotate(180deg)}
+.accbody{display:flex;flex-direction:column;gap:14px;padding-top:6px}
+.accbody[hidden]{display:none}
+.toast{position:fixed;left:max(16px,calc((100vw - 560px)/2));right:84px;bottom:max(16px,calc(env(safe-area-inset-bottom) + 8px));z-index:49;display:flex;align-items:center;gap:10px;padding:14px 12px 14px 16px;border-radius:14px;background:var(--ok);color:var(--on-ink);font:500 15px/1.35 var(--font);box-shadow:0 8px 28px rgba(0,0,0,.18);opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .35s ease,transform .45s cubic-bezier(.2,.8,.2,1)}
+.toast.show{opacity:1;transform:none;pointer-events:auto}
+.toast.err{background:var(--accent);color:#fff}
+.toast>i{font-size:20px;line-height:1;flex:none}
+.toast span{flex:1;min-width:0}
+.toast .x{flex:none;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:999px;background:transparent;color:inherit;cursor:pointer;font-size:18px;opacity:.8}
+.toast .x:hover{opacity:1;background:rgba(255,255,255,.16)}
 </style></head><body>
 
 <button class="theme" id="themeBtn" type="button" aria-label="Switch to light mode"><i class="ri-sun-line" aria-hidden="true"></i></button>
+<div class="toast" id="toast" role="status" aria-live="polite"><i class="ri-checkbox-circle-fill" id="toastIcon" aria-hidden="true"></i><span id="say"></span><button class="x" id="toastX" type="button" aria-label="Dismiss"><i class="ri-close-line" aria-hidden="true"></i></button></div>
 <div class="wrap">
   <header>
     <p class="meta">Saturday &amp; Sunday, November 28–29, 2026</p>
@@ -301,13 +314,12 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
         <button type="button" class="pill" aria-pressed="false">Whatever</button>
       </div>
       <label for="dressText"><span class="meta">Dress notes</span>
-        <span class="note help">If you are planning a full dress, a big cowboy hat, a fur coat, or a pair of wings, for example, let us know. This will help you 1. lock it in and 2. help us shape the full picture. (Thanks for letting me be a Scorpio here.)</span>
+        <span class="note help">If you are planning a full dress, a big cowboy hat, a fur coat, flowers, or a pair of wings, for example, let us know. This will help you 1. lock it in and 2. help us shape the full picture. (Thanks for letting me be a Scorpio here.)</span>
         <textarea id="dressText" rows="2" maxlength="400" placeholder="What you’re wearing"></textarea>
       </label>
       <button type="button" class="btn full" id="saveDetails" hidden>Save changes</button>
     </div>
     <ol id="slots"></ol>
-    <p class="note" id="say" role="status" aria-live="polite"></p>
   </section>
 
 
@@ -318,19 +330,21 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
       <button class="btn full" id="copyAddr" type="button">Copy address</button>
     </div>
     <p class="note" id="copyNote" role="status"></p>
-    <figure class="map"><div class="mapwrap" role="img" aria-label="Minimal map of the shoot area in Crown Heights with Downtown Brooklyn, The Exley, Sunrise Sunset Cafe and The NYC Eagle marked"><img class="lt" src="/map/map-light.jpg" alt="" width="1210" height="1603"><img class="dk" src="/map/map-dark.jpg" alt="" width="1210" height="1603"><span class="pin you" style="left:59.95%;top:92.51%"><i></i><span class="lb"><b>Shoot</b><small>Sterling St, approx.</small></span></span><span class="pin l" style="left:89.26%;top:63.0%"><i></i><span class="lb"><b>Sunrise Sunset Cafe</b><small>2.7 mi</small></span></span><span class="pin" style="left:10.74%;top:7.49%"><i></i><span class="lb"><b>The NYC Eagle</b><small>6.7 mi</small></span></span><span class="pin" style="left:27.64%;top:65.11%"><i></i><span class="lb"><b>Downtown Brooklyn</b><small>2.6 mi</small></span></span><span class="pin" style="left:61.57%;top:41.59%"><i></i><span class="lb"><b>The Exley</b><small>3.7 mi</small></span></span></div><figcaption>Straight-line distances from the shoot. Map data &copy; OpenStreetMap contributors.</figcaption></figure>
+    <figure class="map"><div class="mapwrap" role="img" aria-label="Minimal map of the shoot area in Crown Heights with Downtown Brooklyn, The Exley, Sunrise Sunset Cafe and The NYC Eagle marked"><img class="lt" src="/map/map-light.jpg" alt="" width="1210" height="1603"><img class="dk" src="/map/map-dark.jpg" alt="" width="1210" height="1603"><span class="pin you" style="left:59.95%;top:92.51%"><i></i><span class="lb"><b>Photo shoot</b><small>Sterling St, approx.</small></span></span><span class="pin l" style="left:89.26%;top:63.0%"><i></i><span class="lb"><b>Sunrise Sunset Cafe</b><small>2.7 mi</small></span></span><span class="pin" style="left:10.74%;top:7.49%"><i></i><span class="lb"><b>The NYC Eagle</b><small>6.7 mi</small></span></span><span class="pin" style="left:27.64%;top:65.11%"><i></i><span class="lb"><b>Downtown Brooklyn</b><small>2.6 mi</small></span></span><span class="pin" style="left:61.57%;top:41.59%"><i></i><span class="lb"><b>The Exley</b><small>3.7 mi</small></span></span></div><figcaption>Straight-line distances from the shoot. Map data &copy; OpenStreetMap contributors.</figcaption></figure>
     <p>Getting around the city can be tough. If getting to or from the location is a blocker for your participation, please talk with Pat to see what accommodation can be made.</p>
   </section>
 
   <section class="log" id="logSection" hidden>
-    <p class="meta">Backup log</p>
-    <p class="note">Every pick, move and release is saved here with a timestamp. Only visible when the page is opened with your private admin link.</p>
+    <button class="acc" id="logToggle" type="button" aria-expanded="false" aria-controls="logBody"><span class="meta">Backup log</span><i class="ri-arrow-down-s-line" aria-hidden="true"></i></button>
+    <div class="accbody" id="logBody" hidden>
+    <p class="note">Every booking, move and release is saved here with a timestamp. Only visible when the page is opened with your private admin link.</p>
     <div class="row">
       <button class="btn sm" id="dlSheet" type="button">Download sign-ups</button>
       <button class="btn sm quiet" id="dlLog" type="button">Download full log</button>
     </div>
     <p class="note" id="logCount"></p>
     <div class="logbox" id="logBox"></div>
+    </div>
   </section>
 </div>
 
@@ -384,7 +398,15 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
     finally{busy=false;b.disabled=false;await refresh();render();}
   });
 
-  function say(msg){$('say').textContent=msg||'';}
+  var toast=$('toast');
+  function say(msg){
+    $('say').textContent=msg||'';
+    var bad=/didn.t|just taken|try again|choose another/i.test(msg||'');
+    toast.classList.toggle('err',bad);$('toastIcon').className=bad?'ri-error-warning-fill':'ri-checkbox-circle-fill';
+    toast.classList.toggle('show',!!msg);
+  }
+  $('toastX').addEventListener('click',function(){say('');});
+  $('logToggle').addEventListener('click',function(){var o=this.getAttribute('aria-expanded')!=='true';this.setAttribute('aria-expanded',o?'true':'false');$('logBody').hidden=!o;});
   function mine(){for(var k in claims){if(claims[k].mine)return SLOTS.find(function(x){return x.id===k;});}return null;}
 
   function copyText(text,note){
