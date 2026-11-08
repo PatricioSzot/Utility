@@ -122,6 +122,8 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .sk{display:flex;justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 .sk img{display:block;flex:0 0 auto;margin:0 auto;height:240px;width:auto;max-width:none;border-radius:6px}
 .sk:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.pick{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;background:var(--bg);padding-block:10px;margin-top:-10px;box-shadow:0 1px 0 var(--line)}
+.pick time{font:600 14px/1.2 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
 </style></head><body>
 
 <div class="wrap">
@@ -193,7 +195,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
   </section>
 
   <section>
-    <h2>Pick your time</h2>
+    <h2 class="pick"><span>Pick your time</span> <time datetime="2026-11-28">Sat, Nov 28, 2026</time></h2>
     <p class="note">All times are Eastern. One 30 minute slot each.</p>
     <div class="count">
       <div class="ticks" id="ticks" aria-hidden="true"></div>
