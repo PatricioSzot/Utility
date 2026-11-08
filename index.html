@@ -27,6 +27,7 @@
   --muted:#6A6967;
   --line:#D3D2CE;
   --accent:#6E1020;
+  --ok:#2F7D4F;
   --ring:rgba(110,16,32,.16);
   --on-ink:#F6F6F4;
   --font:'Syne',system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -34,11 +35,11 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0F0F0F;--surface:#181818;--ink:#ECECEA;--muted:#8E8D8A;--line:#2B2B2A;--accent:#E0566E;--ring:rgba(224,86,110,.22);--on-ink:#0F0F0F;color-scheme:dark;
+    --bg:#0F0F0F;--surface:#181818;--ink:#ECECEA;--muted:#8E8D8A;--line:#2B2B2A;--accent:#E0566E;--ok:#5CC285;--ring:rgba(224,86,110,.22);--on-ink:#0F0F0F;color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0F0F0F;--surface:#181818;--ink:#ECECEA;--muted:#8E8D8A;--line:#2B2B2A;--accent:#E0566E;--ring:rgba(224,86,110,.22);--on-ink:#0F0F0F;color-scheme:dark;
+  --bg:#0F0F0F;--surface:#181818;--ink:#ECECEA;--muted:#8E8D8A;--line:#2B2B2A;--accent:#E0566E;--ok:#5CC285;--ring:rgba(224,86,110,.22);--on-ink:#0F0F0F;color-scheme:dark;
 }
 *{box-sizing:border-box}
 body{overflow-x:clip}
@@ -74,7 +75,7 @@ dd{margin:0;min-width:0;overflow-wrap:anywhere}
 .btn.quiet:hover{border-color:var(--ink);background:transparent;color:var(--ink)}
 .btn.full{width:100%;min-height:60px;font-size:18px;justify-content:center}
 .btn.sm{padding:9px 14px;min-height:40px;font-size:14px}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
 
 .map{margin:0;display:flex;flex-direction:column;gap:8px}
 .mapwrap{position:relative;width:100%;aspect-ratio:1210/1603;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
@@ -115,7 +116,7 @@ textarea::placeholder{color:var(--muted)}
 .ticks{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;height:6px}
 .ticks span{background:var(--line);border-radius:1px}
 .ticks span.on{background:var(--ink)}
-.ticks span.me{background:var(--accent)}
+.ticks span.me{background:var(--ok)}
 .note{font-size:15px;line-height:1.5;color:var(--muted);margin:0}
 .note.err{color:var(--accent)}
 ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
@@ -124,7 +125,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .slot .s{font-size:14px;line-height:1.4;color:var(--muted);overflow-wrap:anywhere}
 .slot.taken .t{color:var(--muted)}
 .slot.taken .s{color:var(--ink)}
-.slot.mine .t,.slot.mine .s{color:var(--accent)}
+.slot.mine .t,.slot.mine .s{color:var(--ok)}
 .slot.mine .s{font-weight:500}
 .acts{display:flex;gap:8px;align-items:center}
 .log{display:flex;flex-direction:column;gap:14px}
@@ -140,7 +141,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .skw .mb{width:100%;margin-left:0;cursor:grab}
 .mb.drag{scroll-snap-type:none;cursor:grabbing;user-select:none}
 .mb img{-webkit-user-drag:none;user-select:none}
-.mb:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.mb:focus-visible{outline:2px solid var(--ok);outline-offset:4px}
 .skw{position:relative;width:100vw;margin-left:calc(50% - 50vw)}
 .sk{display:flex;justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:14px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;cursor:grab}
 .sk.drag{cursor:grabbing;user-select:none}
@@ -152,7 +153,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .skw .sc.r i{transform:rotate(45deg);margin-right:4px}
 .skw .sc.l i{transform:rotate(-135deg);margin-left:4px}
 .skw.cl .sc.l,.skw.cr .sc.r{opacity:1}
-.sk:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.sk:focus-visible{outline:2px solid var(--ok);outline-offset:4px}
 .pick{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:12px;background:var(--bg);padding-block:10px;margin-top:-10px;box-shadow:0 1px 0 var(--line)}
 .pick time{font:600 12px/1.2 var(--font);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
 .inv{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px 20px}
