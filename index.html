@@ -40,11 +40,6 @@
   --font:'Syne',system-ui,-apple-system,'Segoe UI',sans-serif;
   --serif:'Serrif',Georgia,'Times New Roman',serif;
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0F0F0F;--surface:#181818;--ink:#ECECEA;--muted:#8E8D8A;--line:#2B2B2A;--accent:#E0566E;--ok:#5CC285;--ring:rgba(224,86,110,.22);--on-ink:#0F0F0F;color-scheme:dark;
-  }
-}
 :root[data-theme="dark"]{
   --bg:#0F0F0F;--surface:#181818;--ink:#ECECEA;--muted:#8E8D8A;--line:#2B2B2A;--accent:#E0566E;--ok:#5CC285;--ring:rgba(224,86,110,.22);--on-ink:#0F0F0F;color-scheme:dark;
 }
@@ -88,7 +83,6 @@ dd{margin:0;min-width:0;overflow-wrap:anywhere}
 .mapwrap{position:relative;width:100%;aspect-ratio:1210/1603;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
 .mapwrap img{position:absolute;inset:0;width:100%;height:100%;display:block}
 .mapwrap .dk{display:none}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .mapwrap .lt{display:none}:root:not([data-theme="light"]) .mapwrap .dk{display:block}}
 :root[data-theme="dark"] .mapwrap .lt{display:none}
 :root[data-theme="dark"] .mapwrap .dk{display:block}
 .pin{position:absolute;width:0;height:0}
@@ -172,16 +166,20 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .day .dc{font:600 12px/1.2 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .trips-h{font:600 12px/1.2 var(--font);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 0}
 dd a{color:inherit;text-decoration:underline;text-underline-offset:3px}
-header{position:relative}
-header .meta{padding-right:56px}
-.theme{position:absolute;top:-4px;right:0;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer;font-size:20px;line-height:1}
+.theme{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,calc(env(safe-area-inset-bottom) + 8px));z-index:50;width:52px;height:52px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer;font-size:22px;line-height:1;box-shadow:0 6px 24px rgba(0,0,0,.14),0 1px 2px rgba(0,0,0,.08);-webkit-tap-highlight-color:transparent;transition:transform .2s ease,border-color .2s ease}
 .theme:hover{border-color:var(--ink)}
-.theme i{line-height:1}
+.theme:active{transform:scale(.93)}
+.theme i{display:block;line-height:1}
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-old(root){z-index:1}
+::view-transition-new(root){z-index:2}
+html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:background-color .6s ease,color .6s ease,border-color .6s ease,box-shadow .6s ease,fill .6s ease,stroke .6s ease!important}
+.skw{margin-top:16px}
 </style></head><body>
 
+<button class="theme" id="themeBtn" type="button" aria-label="Switch to light mode"><i class="ri-sun-line" aria-hidden="true"></i></button>
 <div class="wrap">
   <header>
-    <button class="theme" id="themeBtn" type="button" aria-label="Switch to light mode"><i class="ri-sun-line" aria-hidden="true"></i></button>
     <p class="meta">Saturday &amp; Sunday, November 28–29, 2026</p>
     <h1>Family photo shoot</h1>
   </header>
@@ -554,11 +552,27 @@ header .meta{padding-right:56px}
 
   /* theme toggle */
   (function(){
-    var root=document.documentElement,btn=$('themeBtn'),mq=matchMedia('(prefers-color-scheme: dark)');
-    function cur(){var t=root.getAttribute('data-theme');return t||(mq.matches?'dark':'light');}
+    var root=document.documentElement,btn=$('themeBtn');
+    function cur(){return root.getAttribute('data-theme')==='dark'?'dark':'light';}
     function paint(){var d=cur()==='dark';btn.querySelector('i').className=d?'ri-sun-line':'ri-moon-line';btn.setAttribute('aria-label',d?'Switch to light mode':'Switch to dark mode');}
-    btn.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('shoot-theme',n);}catch(e){}paint();});
-    if(mq.addEventListener)mq.addEventListener('change',function(){if(!root.getAttribute('data-theme'))paint();});
+    function apply(n){root.setAttribute('data-theme',n);try{localStorage.setItem('shoot-theme',n);}catch(e){}paint();}
+    function spin(){try{btn.querySelector('i').animate([{transform:'rotate(-120deg) scale(.4)',opacity:0},{transform:'rotate(0) scale(1)',opacity:1}],{duration:600,easing:'cubic-bezier(.2,.8,.2,1)'});}catch(e){}}
+    btn.addEventListener('click',function(){
+      var n=cur()==='dark'?'light':'dark';
+      var calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if(calm){apply(n);return;}
+      if(document.startViewTransition){
+        var r=btn.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+        var R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+        var t=document.startViewTransition(function(){apply(n);});
+        t.ready.then(function(){
+          root.animate({clipPath:['circle(0px at '+x+'px '+y+'px)','circle('+R+'px at '+x+'px '+y+'px)']},{duration:850,easing:'cubic-bezier(.65,0,.25,1)',pseudoElement:'::view-transition-new(root)'});
+          spin();
+        }).catch(function(){});
+      }else{
+        root.classList.add('theme-fade');apply(n);spin();setTimeout(function(){root.classList.remove('theme-fade');},700);
+      }
+    });
     paint();
   })();
 
