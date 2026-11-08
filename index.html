@@ -134,8 +134,8 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .entry .w{color:var(--muted);font-variant-numeric:tabular-nums}
 .entry b{font-weight:500}
 @media (prefers-reduced-motion:no-preference){.btn{transition:background .15s,color .15s}}
-.mb{display:flex;align-items:flex-start;gap:12px;width:100vw;margin-left:calc(50% - 50vw);padding-inline:max(16px,calc((100vw - 560px)/2));scroll-padding-inline:max(16px,calc((100vw - 560px)/2));overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding-bottom:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-.mb figure{margin:0;flex:0 0 auto;width:240px;scroll-snap-align:start}
+.mb{display:flex;align-items:flex-start;gap:12px;width:100vw;margin-left:calc(50% - 50vw);position:relative;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:none;-webkit-overflow-scrolling:touch;padding-bottom:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.mb figure{margin:0;flex:0 0 auto;width:240px;}
 .mb figure.big{width:360px}
 .mb img{display:block;width:100%;height:auto}
 .skw .mb{width:100%;margin-left:0;cursor:grab}
@@ -557,7 +557,32 @@ dd a{color:inherit;text-decoration:underline;text-underline-offset:3px}
     addEventListener('pointerup',function(){down=false;sc.classList.remove('drag');});
     sc.addEventListener('keydown',function(e){if(e.key==='ArrowRight'){sc.scrollBy({left:240,behavior:'smooth'});e.preventDefault();}else if(e.key==='ArrowLeft'){sc.scrollBy({left:-240,behavior:'smooth'});e.preventDefault();}});
   }
-  wire('sk','skw',true);wire('mb','mbw',false);
+  function loop(scId,wId){
+    var sc=document.getElementById(scId),w=document.getElementById(wId);if(!sc||!w)return;
+    var orig=[].slice.call(sc.children);if(!orig.length)return;
+    function dup(){return orig.map(function(f){var c=f.cloneNode(true);c.setAttribute('aria-hidden','true');return c;});}
+    var before=dup(),after=dup();
+    before.forEach(function(c){sc.insertBefore(c,orig[0]);});
+    after.forEach(function(c){sc.appendChild(c);});
+    w.classList.add('cl','cr');
+    var W=0,adj=false;
+    function measure(){W=orig[0].offsetLeft-before[0].offsetLeft;}
+    function centerFirst(){measure();sc.scrollLeft=orig[0].offsetLeft-(sc.clientWidth-orig[0].offsetWidth)/2;}
+    centerFirst();addEventListener('load',centerFirst);addEventListener('resize',measure);
+    orig.concat(before,after).forEach(function(f){var im=f.querySelector('img');if(im&&!im.complete)im.addEventListener('load',measure);});
+    sc.addEventListener('scroll',function(){
+      if(!W||adj)return;var x=sc.scrollLeft;
+      if(x<W*0.5){adj=true;sc.scrollLeft=x+W;adj=false;}
+      else if(x>W*1.5){adj=true;sc.scrollLeft=x-W;adj=false;}
+    },{passive:true});
+    sc.addEventListener('dragstart',function(e){e.preventDefault();});
+    var down=false,x0=0,s0=0;
+    sc.addEventListener('pointerdown',function(e){if(e.pointerType!=='mouse')return;down=true;x0=e.clientX;s0=sc.scrollLeft;sc.classList.add('drag');});
+    addEventListener('pointermove',function(e){if(down)sc.scrollLeft=s0-(e.clientX-x0);});
+    addEventListener('pointerup',function(){down=false;sc.classList.remove('drag');});
+    sc.addEventListener('keydown',function(e){if(e.key==='ArrowRight'){sc.scrollBy({left:240,behavior:'smooth'});e.preventDefault();}else if(e.key==='ArrowLeft'){sc.scrollBy({left:-240,behavior:'smooth'});e.preventDefault();}});
+  }
+  wire('sk','skw',true);loop('mb','mbw');
 })();
 </script>
 </body></html>
