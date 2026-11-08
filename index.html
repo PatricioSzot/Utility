@@ -120,10 +120,13 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .entry .w{color:var(--muted);font-variant-numeric:tabular-nums}
 .entry b{font-weight:500}
 @media (prefers-reduced-motion:no-preference){.btn{transition:background .15s,color .15s}}
-.mb{display:flex;align-items:flex-start;gap:12px;width:100vw;margin-left:calc(50% - 50vw);padding-inline:max(16px,calc((100vw - 560px)/2));scroll-padding-inline:max(16px,calc((100vw - 560px)/2));overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding-bottom:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
-.mb figure{margin:0;flex:0 0 auto;width:240px;scroll-snap-align:start}
+.mb{display:flex;align-items:flex-start;gap:12px;width:100vw;margin-left:calc(50% - 50vw);padding-inline:calc(50vw - 120px);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding-bottom:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.mb figure{margin:0;flex:0 0 auto;width:240px;scroll-snap-align:center}
 .mb figure.big{width:360px}
 .mb img{display:block;width:100%;height:auto}
+.skw .mb{width:100%;margin-left:0;cursor:grab;scroll-padding-inline:0}
+.mb.drag{scroll-snap-type:none;cursor:grabbing;user-select:none}
+.mb img{-webkit-user-drag:none;user-select:none}
 .mb:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
 .skw{position:relative;width:100vw;margin-left:calc(50% - 50vw)}
 .sk{display:flex;justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:14px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;cursor:grab}
@@ -160,7 +163,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 
   <section>
     <h2>Moodboard</h2>
-    <div class="mb" role="region" aria-label="Moodboard, scrolls sideways" tabindex="0">
+    <div class="skw" id="mbw"><div class="mb" id="mb" role="region" aria-label="Moodboard, scrolls sideways" tabindex="0">
       <figure><img src="moodboard/r01.webp" width="640" height="815" alt="Studio portrait of a tattooed man in a leather cap, vest, harness, gloves, chaps and tall boots" loading="eager" decoding="async"></figure>
       <figure><img src="moodboard/q04.webp" width="640" height="835" alt="Black-and-white portrait of a person looking over their shoulder in a white tank top and dark jeans" loading="lazy" decoding="async"></figure>
       <figure><img src="moodboard/t02.webp" width="640" height="853" alt="Close-up of a person in a black leather bull mask with a nose ring and chain necklace" loading="lazy" decoding="async"></figure>
@@ -193,7 +196,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
       <figure><img src="moodboard/q03.webp" width="640" height="842" alt="Man in a gray cap and tank top taking a gym mirror selfie" loading="lazy" decoding="async"></figure>
       <figure><img src="moodboard/q05.webp" width="640" height="793" alt="Tattooed bearded man lying on a blue beach towel" loading="lazy" decoding="async"></figure>
       <figure><img src="moodboard/t01.webp" width="640" height="764" alt="Black-and-white portrait of a shirtless bearded man in a black cap and plaid shorts, hand at his chin" loading="lazy" decoding="async"></figure>
-    </div>
+    </div><span class="sc l" aria-hidden="true"><i></i></span><span class="sc r" aria-hidden="true"><i></i></span></div>
   </section>
 
   <section>
@@ -474,16 +477,20 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 
 <script>
 (function(){
-  var sc=document.getElementById('sk');if(!sc)return;var im=sc.querySelector('img'),w=document.getElementById('skw');
-  function upd(){var max=sc.scrollWidth-sc.clientWidth;w.classList.toggle('cl',sc.scrollLeft>8);w.classList.toggle('cr',sc.scrollLeft<max-8);}
-  function center(){sc.scrollLeft=Math.max(0,(sc.scrollWidth-sc.clientWidth)/2);upd();}
-  if(im.complete)center();else im.addEventListener('load',center);
-  addEventListener('load',center);addEventListener('resize',upd);sc.addEventListener('scroll',upd,{passive:true});
-  var down=false,x0=0,s0=0;
-  sc.addEventListener('pointerdown',function(e){if(e.pointerType!=='mouse')return;down=true;x0=e.clientX;s0=sc.scrollLeft;sc.classList.add('drag');});
-  addEventListener('pointermove',function(e){if(down)sc.scrollLeft=s0-(e.clientX-x0);});
-  addEventListener('pointerup',function(){down=false;sc.classList.remove('drag');});
-  sc.addEventListener('keydown',function(e){if(e.key==='ArrowRight'){sc.scrollBy({left:240,behavior:'smooth'});e.preventDefault();}else if(e.key==='ArrowLeft'){sc.scrollBy({left:-240,behavior:'smooth'});e.preventDefault();}});
+  function wire(scId,wId,centered){
+    var sc=document.getElementById(scId),w=document.getElementById(wId);if(!sc||!w)return;
+    function upd(){var max=sc.scrollWidth-sc.clientWidth;w.classList.toggle('cl',sc.scrollLeft>8);w.classList.toggle('cr',sc.scrollLeft<max-8);}
+    function center(){if(centered)sc.scrollLeft=Math.max(0,(sc.scrollWidth-sc.clientWidth)/2);upd();}
+    center();addEventListener('load',center);addEventListener('resize',upd);sc.addEventListener('scroll',upd,{passive:true});
+    sc.querySelectorAll('img').forEach(function(im){if(!im.complete)im.addEventListener('load',function(){if(centered)center();else upd();});});
+    sc.addEventListener('dragstart',function(e){e.preventDefault();});
+    var down=false,x0=0,s0=0;
+    sc.addEventListener('pointerdown',function(e){if(e.pointerType!=='mouse')return;down=true;x0=e.clientX;s0=sc.scrollLeft;sc.classList.add('drag');});
+    addEventListener('pointermove',function(e){if(down)sc.scrollLeft=s0-(e.clientX-x0);});
+    addEventListener('pointerup',function(){down=false;sc.classList.remove('drag');});
+    sc.addEventListener('keydown',function(e){if(e.key==='ArrowRight'){sc.scrollBy({left:240,behavior:'smooth'});e.preventDefault();}else if(e.key==='ArrowLeft'){sc.scrollBy({left:-240,behavior:'smooth'});e.preventDefault();}});
+  }
+  wire('sk','skw',true);wire('mb','mbw',false);
 })();
 </script>
 </body></html>
