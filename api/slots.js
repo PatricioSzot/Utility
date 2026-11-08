@@ -25,6 +25,15 @@ async function allClaims() {
 }
 
 const isAdmin = (key) => !!ADMIN_KEY && typeof key === 'string' && key === ADMIN_KEY;
+const PROPS = ['Crate', 'Stool', 'Chair', 'Ladder'];
+function details(b) {
+  const props = Array.isArray(b.props) ? PROPS.filter((p) => b.props.includes(p)) : [];
+  return {
+    pose: String(b.pose || '').trim().slice(0, 600),
+    props,
+    dress: String(b.dress || '').trim().slice(0, 400),
+  };
+}
 const goodCid = (c) => typeof c === 'string' && c.length >= 8 && c.length <= 64;
 
 async function log(entry) {
@@ -43,7 +52,13 @@ module.exports = async (req, res) => {
       const claims = await allClaims();
       const slots = {};
       for (const k of Object.keys(claims)) {
-        slots[k] = { name: claims[k].name, at: claims[k].at, mine: goodCid(cid) && claims[k].cid === cid };
+        const mine = goodCid(cid) && claims[k].cid === cid;
+        slots[k] = { name: claims[k].name, at: claims[k].at, mine };
+        if (mine || isAdmin(req.query && req.query.admin)) {
+          slots[k].pose = claims[k].pose || '';
+          slots[k].props = claims[k].props || [];
+          slots[k].dress = claims[k].dress || '';
+        }
       }
       const body = { slots };
       if (isAdmin(req.query && req.query.admin)) {
@@ -68,14 +83,26 @@ module.exports = async (req, res) => {
         if (!goodCid(b.cid)) return res.status(400).json({ error: 'bad_client' });
         const claims = await allClaims();
         const prevId = Object.keys(claims).find((k) => claims[k].cid === b.cid);
-        const won = await redis(['HSETNX', 'slots', slot, JSON.stringify({ name, cid: b.cid, at: now })]);
+        const d = details(b);
+        const won = await redis(['HSETNX', 'slots', slot, JSON.stringify({ name, cid: b.cid, at: now, ...d })]);
         if (won !== 1) {
           const cur = (await allClaims())[slot];
           return res.status(409).json({ error: 'taken', by: cur ? cur.name : '' });
         }
         if (prevId && prevId !== slot) await redis(['HDEL', 'slots', prevId]);
-        await log({ t: now, action: prevId ? 'move' : 'claim', slot, label, name, fromSlot: prevId || '' });
+        await log({ t: now, action: prevId ? 'move' : 'claim', slot, label, name, fromSlot: prevId || '', ...d });
         return res.status(200).json({ ok: true, moved: !!prevId });
+      }
+
+      if (b.action === 'details') {
+        const raw = await redis(['HGET', 'slots', slot]);
+        if (!raw) return res.status(404).json({ error: 'no_slot' });
+        const cur = JSON.parse(raw);
+        if (!(goodCid(b.cid) && cur.cid === b.cid)) return res.status(403).json({ error: 'not_yours' });
+        const d = details(b);
+        await redis(['HSET', 'slots', slot, JSON.stringify({ ...cur, ...d })]);
+        await log({ t: now, action: 'update', slot, label, name: cur.name, ...d });
+        return res.status(200).json({ ok: true });
       }
 
       if (b.action === 'release') {

@@ -67,6 +67,7 @@ dd{margin:0;min-width:0;overflow-wrap:anywhere}
   border:1px solid var(--ink);border-radius:999px;padding:12px 18px;min-height:44px;cursor:pointer;
   display:inline-flex;align-items:center;justify-content:center;text-decoration:none;
 }
+.btn[hidden]{display:none}
 .btn:hover{background:var(--ink);color:var(--on-ink)}
 .btn:disabled{opacity:.4;cursor:default;background:transparent;color:var(--ink)}
 .btn.quiet{border-color:var(--line);color:var(--muted)}
@@ -98,6 +99,18 @@ input[type=text]{
   border:1px solid var(--line);border-radius:10px;padding:14px;min-height:52px;margin-top:8px;
 }
 input[type=text]::placeholder{color:var(--muted)}
+textarea{width:100%;font:400 18px/1.4 var(--font);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:8px;resize:vertical;min-height:52px;display:block}
+textarea::placeholder{color:var(--muted)}
+.pose{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.pose textarea{margin-top:0}
+.pose label textarea{margin-top:8px}
+.pose .meta{margin-top:6px}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font:500 16px/1 var(--font);color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:12px 18px;min-height:44px;cursor:pointer}
+.pill:hover{border-color:var(--ink)}
+.pill[aria-pressed=true]{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.slot .d{margin-top:2px;font-size:13px;line-height:1.4;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.slot .d.open{white-space:normal;overflow-wrap:anywhere}
 .count{display:flex;flex-direction:column;gap:10px}
 .ticks{display:grid;grid-template-columns:repeat(20,1fr);gap:3px;height:6px}
 .ticks span{background:var(--line);border-radius:1px}
@@ -258,6 +271,22 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
       <input type="text" id="name" autocomplete="name" placeholder="First and last name" maxlength="60">
     </label>
     <p class="note" id="hint" role="status" hidden></p>
+    <div class="pose">
+      <h3 class="meta">Pose preferences</h3>
+      <p class="note">Share some ideas for how you’d want to pose and ideas for your portrait.</p>
+      <textarea id="poseText" rows="3" maxlength="600" aria-label="Pose and portrait ideas" placeholder="Poses, mood, references"></textarea>
+      <span class="meta">Props</span>
+      <div class="pills" id="pills" role="group" aria-label="Props">
+        <button type="button" class="pill" aria-pressed="false">Crate</button>
+        <button type="button" class="pill" aria-pressed="false">Stool</button>
+        <button type="button" class="pill" aria-pressed="false">Chair</button>
+        <button type="button" class="pill" aria-pressed="false">Ladder</button>
+      </div>
+      <label for="dressText"><span class="meta">Dress notes</span>
+        <textarea id="dressText" rows="2" maxlength="400" placeholder="What you’re wearing"></textarea>
+      </label>
+      <button type="button" class="btn full" id="saveDetails" hidden>Save changes</button>
+    </div>
     <ol id="slots"></ol>
     <p class="note" id="say" role="status" aria-live="polite"></p>
   </section>
@@ -315,6 +344,27 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
     $('hint').hidden=true;
   });
 
+  var poseEl=$('poseText'),dressEl=$('dressText'),pills=[].slice.call(document.querySelectorAll('#pills .pill')),touched=false,expanded=false;
+  function getD(){return{pose:poseEl.value.trim(),props:pills.filter(function(p){return p.getAttribute('aria-pressed')==='true';}).map(function(p){return p.textContent;}),dress:dressEl.value.trim()};}
+  function setD(d){poseEl.value=d.pose||'';dressEl.value=d.dress||'';pills.forEach(function(p){p.setAttribute('aria-pressed',(d.props||[]).indexOf(p.textContent)>-1?'true':'false');});}
+  try{var sd=JSON.parse(localStorage.getItem('shoot-details')||'null');if(sd){setD(sd);touched=true;}}catch(e){}
+  function dText(c){return[(c.props||[]).join(', '),c.pose,c.dress].filter(Boolean).join(' · ');}
+  function same(a,b){return (a.pose||'')===(b.pose||'')&&(a.dress||'')===(b.dress||'')&&(a.props||[]).join()===(b.props||[]).join();}
+  function updSave(){
+    var my=mine(),b=$('saveDetails');
+    b.hidden=!(loaded&&my&&!same(getD(),claims[my.id]));
+  }
+  function onDetails(){touched=true;try{localStorage.setItem('shoot-details',JSON.stringify(getD()));}catch(e){}updSave();}
+  poseEl.addEventListener('input',onDetails);dressEl.addEventListener('input',onDetails);
+  pills.forEach(function(p){p.addEventListener('click',function(){p.setAttribute('aria-pressed',p.getAttribute('aria-pressed')==='true'?'false':'true');onDetails();});});
+  $('saveDetails').addEventListener('click',async function(){
+    var my=mine();if(!my||busy)return;busy=true;var b=$('saveDetails');b.disabled=true;
+    try{var d=getD();var r=await api('POST',Object.assign({action:'details',slot:my.id,label:my.full,cid:cid},d));
+      say(r.status===200?'Details saved.':'That didn’t save. Try again.');}
+    catch(e){say('That didn’t save. Try again.');}
+    finally{busy=false;b.disabled=false;await refresh();render();}
+  });
+
   function say(msg){$('say').textContent=msg||'';}
   function mine(){for(var k in claims){if(claims[k].mine)return SLOTS.find(function(x){return x.id===k;});}return null;}
 
@@ -357,6 +407,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
       else if(c)s.textContent=isMine?'Yours · '+c.name:'Taken · '+c.name;
       else s.textContent='Open';
       left.appendChild(t);left.appendChild(s);
+      if(c&&(isMine||isAdmin)){var dt=dText(c);if(dt){var dd=document.createElement('div');dd.className='d'+(expanded?' open':'');dd.textContent=dt;dd.title='Tap to '+(expanded?'collapse':'expand');dd.addEventListener('click',function(){expanded=!expanded;render();});left.appendChild(dd);}}
       var acts=document.createElement('div');acts.className='acts';
 
       if(loaded){
@@ -380,6 +431,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
       }
       li.appendChild(left);li.appendChild(acts);list.appendChild(li);
     });
+    updSave();
     var open=SLOTS.length-taken;
     $('countText').textContent=loaded?(open===0?'All '+SLOTS.length+' times are taken':open+' of '+SLOTS.length+' times open'):(notConfigured?SLOTS.length+' half-hour times across Saturday and Sunday, 5:00 PM to 10:00 PM':'Checking which times are open');
     var n=$('notice'),msg='';
@@ -402,6 +454,8 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
       if(r.status===500&&r.data.error==='not_configured'){notConfigured=true;stale=false;render();return;}
       if(r.status!==200)throw new Error('bad');
       notConfigured=false;claims=r.data.slots||{};loaded=true;stale=false;
+      var mm=Object.keys(claims).filter(function(k){return claims[k].mine;})[0];
+      if(mm&&!touched){setD(claims[mm]);touched=true;}
       if(isAdmin&&r.data.log){logEntries=r.data.log;renderLog();}
     }catch(e){stale=true;}
     render();
@@ -414,7 +468,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
     var prev=mine();
     busy=true;say('');render();
     try{
-      var r=await api('POST',{action:'claim',slot:slot.id,label:slot.full,name:name,cid:cid});
+      var r=await api('POST',Object.assign({action:'claim',slot:slot.id,label:slot.full,name:name,cid:cid},getD()));
       if(r.status===409){say(slot.full+' was just taken'+(r.data.by?' by '+r.data.by:'')+'. Pick another time.');}
       else if(r.status!==200){say('That didn’t save, and nothing was changed. Try again.');}
       else{say((prev?'Moved to ':'You’re booked for ')+slot.full+'.');}
@@ -434,7 +488,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
   }
 
   /* ---- admin-only log panel (open the page with ?admin=YOUR_KEY) ---- */
-  var ACTION={claim:'Picked',move:'Moved to','release':'Released','release-by-editor':'Released by Pat'};
+  var ACTION={claim:'Picked',move:'Moved to',update:'Updated details for','release':'Released','release-by-editor':'Released by Pat'};
   function fmtT(iso){try{return new Date(iso).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',second:'2-digit'});}catch(e){return iso;}}
   function renderLog(){
     var box=$('logBox');box.textContent='';
@@ -446,6 +500,7 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
       var b=document.createElement('b');b.textContent=e.name||'Unknown';
       m.appendChild(b);
       m.appendChild(document.createTextNode(' · '+(ACTION[e.action]||e.action)+' '+e.label));
+      var dt=dText(e);if(dt){var x=document.createElement('div');x.className='w';x.textContent=dt;m.appendChild(x);}
       d.appendChild(w);d.appendChild(m);box.appendChild(d);
     });
   }
@@ -456,13 +511,13 @@ ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
     setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
   }
   $('dlSheet').addEventListener('click',function(){
-    var rows=[['Slot','Time','Name','Picked at (ET)']];
-    SLOTS.forEach(function(sl){var c=claims[sl.id];rows.push([sl.id,sl.full,c?c.name:'(open)',c?fmtT(c.at):'']);});
+    var rows=[['Slot','Time','Name','Picked at (ET)','Props','Pose ideas','Dress notes']];
+    SLOTS.forEach(function(sl){var c=claims[sl.id];rows.push([sl.id,sl.full,c?c.name:'(open)',c?fmtT(c.at):'',c?(c.props||[]).join(', '):'',c?c.pose||'':'',c?c.dress||'':'']);});
     saveCsv('photo-shoot-signups.csv',rows);
   });
   $('dlLog').addEventListener('click',function(){
-    var rows=[['Timestamp (ET)','Action','Slot','Time','Name','From slot']];
-    logEntries.forEach(function(e){rows.push([fmtT(e.t),e.action,e.slot,e.label,e.name,e.fromSlot||'']);});
+    var rows=[['Timestamp (ET)','Action','Slot','Time','Name','From slot','Props','Pose ideas','Dress notes']];
+    logEntries.forEach(function(e){rows.push([fmtT(e.t),e.action,e.slot,e.label,e.name,e.fromSlot||'',(e.props||[]).join(', '),e.pose||'',e.dress||'']);});
     saveCsv('photo-shoot-log.csv',rows);
   });
   if(isAdmin)$('logSection').hidden=false;
