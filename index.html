@@ -550,7 +550,8 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
     var list=$('slots');list.textContent='';
     var my=mine(),taken=0;
     var ticks=$('ticks');ticks.textContent='';
-    var dayOpen={};SLOTS.forEach(function(sl){dayOpen[sl.day.k]=(dayOpen[sl.day.k]||0)+(claims[sl.id]?0:1);});
+    function isClosed(sl){return sl.day.k==='sat'&&+sl.id.split('-')[1]>=1830;}
+    var dayOpen={};SLOTS.forEach(function(sl){dayOpen[sl.day.k]=(dayOpen[sl.day.k]||0)+(claims[sl.id]||isClosed(sl)?0:1);});
     var lastDay=null;
     SLOTS.forEach(function(sl){
       if(sl.day!==lastDay){
@@ -574,10 +575,10 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
       var s=document.createElement('div');s.className='s';
       if(!loaded)s.textContent=notConfigured?'Not available yet':'Checking';
       else if(c)s.textContent=isMine?'Yours · '+c.name:'Taken · '+c.name;
-      else s.textContent='Open';
+      else s.textContent=isClosed(sl)?'Unavailable':'Open';
       left.appendChild(t);left.appendChild(s);
       var hm=+sl.id.split('-')[1];
-      if(sl.day.k==='sat'&&hm>=1830){var wn=document.createElement('div');wn.className='w';wn.innerHTML='<i class="ri-error-warning-line" aria-hidden="true"></i><span>Likely to be rescheduled.</span>';left.appendChild(wn);}
+      if(isClosed(sl)&&c){var wn=document.createElement('div');wn.className='w';wn.innerHTML='<i class="ri-error-warning-line" aria-hidden="true"></i><span>Likely to be rescheduled.</span>';left.appendChild(wn);}
       if(c&&(isMine||isAdmin)){var dt=dText(c);if(dt){var dd=document.createElement('div');dd.className='d'+(expanded?' open':'');dd.textContent=dt;dd.title='Tap to '+(expanded?'collapse':'expand');dd.addEventListener('click',function(){expanded=!expanded;render();});left.appendChild(dd);}}
       if(c&&c.np>0&&(isMine||isAdmin)){
         var ph=document.createElement('div');ph.className='ph';
@@ -587,7 +588,8 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
       var acts=document.createElement('div');acts.className='acts';
 
       if(loaded){
-        if(!c){
+        if(!c&&isClosed(sl)){li.className+=' taken';}
+        else if(!c){
           var b=document.createElement('button');b.type='button';b.className='btn';b.disabled=busy;
           b.textContent=my?'Move here':'Select';
           b.setAttribute('aria-label',(my?'Move to ':'Select ')+sl.full);

@@ -115,6 +115,7 @@ module.exports = async (req, res) => {
       const now = new Date().toISOString();
 
       if (b.action === 'claim') {
+        if (/^sat-(18(30)|19|20|21)/.test(slot)) return res.status(403).json({ error: 'closed' });
         const name = String(b.name || '').trim().slice(0, 60);
         if (!name) return res.status(400).json({ error: 'name_required' });
         if (!goodCid(b.cid)) return res.status(400).json({ error: 'bad_client' });
