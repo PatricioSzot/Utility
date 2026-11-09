@@ -35,13 +35,14 @@
   --line:#D3D2CE;
   --accent:#6E1020;
   --ok:#2F7D4F;
+  --warn:#A8620A;
   --ring:rgba(110,16,32,.16);
   --on-ink:#F6F6F4;
   --font:'Syne',system-ui,-apple-system,'Segoe UI',sans-serif;
   --serif:'Serrif',Georgia,'Times New Roman',serif;
 }
 :root[data-theme="dark"]{
-  --bg:#0F0F0F;--surface:#181818;--ink:#ECECEA;--muted:#8E8D8A;--line:#2B2B2A;--accent:#E0566E;--ok:#5CC285;--ring:rgba(224,86,110,.22);--on-ink:#0F0F0F;color-scheme:dark;
+  --bg:#0F0F0F;--surface:#181818;--ink:#ECECEA;--muted:#8E8D8A;--line:#2B2B2A;--accent:#E0566E;--ok:#5CC285;--warn:#E0A24A;--ring:rgba(224,86,110,.22);--on-ink:#0F0F0F;color-scheme:dark;
 }
 *{box-sizing:border-box}
 body{overflow-x:clip}
@@ -124,6 +125,8 @@ textarea::placeholder{color:var(--muted)}
 .thumb{position:relative;width:64px;height:64px;border-radius:6px;background:var(--line)}
 .thumb img{width:100%;height:100%;object-fit:cover;border-radius:6px;display:block}
 .thumb .rm{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;padding:0}
+.slot .w{margin-top:4px;font-size:13px;line-height:1.4;color:var(--warn);display:flex;gap:5px;align-items:flex-start}
+.slot .w i{font-size:15px;line-height:1.3}
 .slot .ph{display:flex;gap:6px;margin-top:8px}
 .slot .ph a{display:block;width:44px;height:44px;border-radius:4px;overflow:hidden;background:var(--line)}
 .slot .ph img{width:100%;height:100%;object-fit:cover;display:block}
@@ -573,6 +576,8 @@ html.theme-fade *,html.theme-fade *::before,html.theme-fade *::after{transition:
       else if(c)s.textContent=isMine?'Yours · '+c.name:'Taken · '+c.name;
       else s.textContent='Open';
       left.appendChild(t);left.appendChild(s);
+      var hm=+sl.id.split('-')[1];
+      if(sl.day.k==='sat'&&hm>=1830){var wn=document.createElement('div');wn.className='w';wn.innerHTML='<i class="ri-error-warning-line" aria-hidden="true"></i><span>Likely to be rescheduled.</span>';left.appendChild(wn);}
       if(c&&(isMine||isAdmin)){var dt=dText(c);if(dt){var dd=document.createElement('div');dd.className='d'+(expanded?' open':'');dd.textContent=dt;dd.title='Tap to '+(expanded?'collapse':'expand');dd.addEventListener('click',function(){expanded=!expanded;render();});left.appendChild(dd);}}
       if(c&&c.np>0&&(isMine||isAdmin)){
         var ph=document.createElement('div');ph.className='ph';
